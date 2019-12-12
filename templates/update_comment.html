@@ -1,0 +1,38 @@
+{% extends 'layout.html'%}
+{% block body %}
+
+<div class="index-body container">
+
+	<div class="container">
+
+		<div class="card-header">Update Comment</div>
+
+		<form action="" method="post">
+			<div class="text-area">
+
+				<textarea name="update_comment_content" id="update_comment_content"
+					class="p-1 md-textarea form-control rounded-0" rows="3" placeholder="article body.."
+					value=""></textarea>
+
+				<br>
+				<button name="update_comment_submit_button" type="submit" class="btn btn-success btn-block">UPDATE
+					COMMENT</button>
+
+			</div>
+
+		</form>
+
+	</div>
+
+</div>
+
+
+<!-- <script src='https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js' referrerpolicy="origin"></script> -->
+<script src="{{url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
+<script>
+	tinymce.init({
+		selector: '#update_comment_content'
+	});
+</script>
+
+{% endblock %}

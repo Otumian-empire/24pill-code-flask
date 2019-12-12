@@ -1,0 +1,55 @@
+{% extends 'layout.html'%}
+{% block body %}
+<div class="index-body container">
+
+    <!-- check session here -->
+    <div class="card card-login mx-auto mt-1">
+        <div class="card-header text-center text-capitalize">
+            You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here!!
+        </div>
+    </div>
+
+
+
+    <div class="container">
+
+        <!-- loop through the article -->
+        <div class="article">
+
+            <!-- title -->
+            <h2>Title</h2>
+
+            <!-- date and author's email-->
+            <i class="fa fa-calendar"></i>
+            <span class="mr-2">Date and time</span>
+            <i class="fa fa-user"></i>
+            <span class="">User</span>
+            <br>
+            <hr>
+
+            <!-- content -->
+            <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Enim culpa fugiat nemo voluptates odio pariatur obcaecati doloribus? Magni quo libero corporis, ea, aliquam est, asperiores assumenda nobis quia id eos.
+            Incidunt in cum explicabo consequatur molestiae reiciendis harum illo mollitia. Enim sequi hic a incidunt eligendi eaque libero deleniti! Expedita fugit inventore deserunt aperiam obcaecati officia enim, fuga quis blanditiis!
+            Repellat accusantium dicta itaque ex fugiat quidem sit tenetur doloribus facilis. Ipsa aliquam corrupti doloremque perferendis ex illum minima quaerat temporibus. Iure voluptate suscipit molestias? Quisquam maiores unde quia nobis.<a
+                    href="/article"><span>more</span></a></p>
+                    <!-- add article id -->
+
+        </div>
+        
+        <div class="card mx-auto mt-5 card-register text-center">
+
+            <div class="card-header text-uppercase">NO Articles</div>
+
+            <div class="card-body text-lowercase">
+                <p>sorry no articles here yet!! <a href="/write_article">Add</a> an article..</p>
+            </div>
+
+        </div>
+
+        <!-- <?php endif; ?> -->
+
+    </div>
+
+</div>
+
+{% endblock %}

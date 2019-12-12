@@ -1,0 +1,34 @@
+{% extends 'layout.html'%}
+{% block body %}
+<div class="index-body container">
+
+    {% if True %}
+    <div class="article">
+        <a href="/article">
+            <!-- title -->
+            <h2>Header</h2>
+        </a>
+
+        <!-- date and author's email-->
+        <i class="fa fa-calendar"></i>
+        <span class="mr-2">Date and email</span>
+        <i class="fa fa-user"></i>
+        <span class="">Some basic info</span>
+
+    </div>
+    {%
+        else
+     %} <div class="card mx-auto mt-5 card-register text-center">
+
+        <div class="card-header text-uppercase">NO Articles</div>
+
+        <div class="card-body text-lowercase">
+            <p>sorry no articles here yet!! <a href="/write_article">Add</a> an article..</p>
+        </div>
+
+    </div>
+
+    {% endif  %}
+
+</div>
+{% endblock %}

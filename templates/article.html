@@ -1,0 +1,78 @@
+{% extends 'layout.html'%}
+{% block body %}
+<div class="index-body container">
+
+	<div class="container">
+
+		<!-- post -->
+		<div class="article">
+
+			<!-- title -->
+			<h2>post_title</h2>
+
+			<!-- date and author's email-->
+			<i class="fa fa-calendar"></i>
+			<span>2-5-19</span>
+			<i class="fa fa-user"></i>
+			<span>hi@email.com</span>
+			<br>
+			<hr>
+
+			<!-- content -->
+			<div>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Modi accusantium a veritatis rerum voluptates
+				libero unde maiores, dolorem voluptatibus minima, sapiente saepe officiis ipsam atque tempore.
+				Doloremque eius ullam consectetur?Lorem ipsum dolor sit amet consectetur adipisicing elit. In, dolorem?
+				Sed dolorum nostrum rem commodi earum, velit itaque quasi laborum explicabo quaerat officia unde
+				laudantium accusamus ad minus omnis deleniti!</div>
+			<br><br>
+
+			<!-- comment -->
+			{% if True %}
+			<div class="card card-login mx-auto mt-1">
+				<div class="card-header text-center text-capitalize">
+					You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here to add a comment!!
+				</div>
+			</div>
+			{% endif %}
+
+			<div class="text-area">
+				<div class="card-header">Add Comment</div>
+
+				<form action="" method="post">
+					<textarea class="comment-box p-1 md-textarea form-control rounded-0"
+						placeholder="Place your comments here" type="textarea" id="comment-box"
+						name="comment-box"></textarea>
+					<br>
+
+					<div class="input-group">
+						<button class="btn btn-success btn-block" id="add-comment-btn"
+							name="add-comment-btn">ADD</button>
+					</div>
+
+				</form>
+
+			</div>
+
+		</div>
+
+		<!-- read comments from db on the page -->
+
+		<!-- comment -->
+		<div class="comments article">
+
+			<ul class="comments-list"></ul>
+
+		</div>
+
+	</div>
+
+</div>
+
+
+<script src="url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
+<script>
+	tinymce.init({
+		selector: '.comment-box'
+	});
+</script>
+{% endblock %}

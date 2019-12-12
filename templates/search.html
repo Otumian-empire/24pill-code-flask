@@ -1,0 +1,31 @@
+{% extends 'layout.html'%}
+{% block body %}
+
+<div class="index-body container">
+
+    <!-- loop through the search result -->
+    <div class="article">
+        <a href="/article">
+            <!-- title -->
+            <h2>title</h2>
+        </a>
+
+        <!-- date and author's email-->
+        <span>Date and author's email</span>
+
+    </div>
+
+
+    <div class="card mx-auto mt-5 card-register text-center">
+
+        <div class="card-header text-uppercase">NO Articles</div>
+
+        <div class="card-body text-lowercase">
+            <p>sorry no articles here yet!! <a href="/write_article"">Add</a> an article..</p>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
