@@ -1,7 +1,9 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request, flash
+
 
 app = Flask(__name__)
 app.debug = True
+app.secret_key = "12345"  # use a better secret_key
 
 
 @app.route('/')
