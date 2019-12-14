@@ -1,4 +1,5 @@
-from string import whitespace, punctuation, ascii_letters, digits
+from string import {whitespace, punctuation, ascii_letters,
+                    ascii_lowercase, ascii_uppercase, digits}
 from random import randint
 from http.client import HTTPSConnection as httpConn
 
@@ -23,15 +24,36 @@ class Genetator:
 
         return token
 
+    def get_schar_count(self, data='', sack=[]):
+        """ Returns the number of specific characters in data that is in sack
+        By default, data is an empty string and sack is an empty list
+        Both data and list, are iterables
+        If neither data or sack is set, zero in returned """
+
+        if not data or not sack:
+            return 0
+
+        counter = 0
+
+        for char in data:
+            if char in sack:
+                counter += 1
+
+        return counter
+
+    def get_bcrypt_hashed_passwd(self, password):
+        # use bcrypt to hash the password
+        pass
+
 
 class Validator:
 
     def validate_size(self, data, recommended_size=[6, 20]):
         """ 
-        return is the size of the data is greater than or equal to the recommended size
-        By default, the recommended size is [6, 20]
+        Return is the size of the data is greater than or equal to the recommended size.
+        By default, the recommended size is [6, 20].
         Example: Validator().validate_size(data, [6, 20]).
-        Returs True if 6 <= size of data <= 20, else False.
+        Returns True if 6 <= size of data <= 20, else False.
         """
         data_size = len(data)
         if recommended_size[0] <= data_size <= recommended_size[1]:
@@ -139,17 +161,33 @@ class Validator:
         MIN_PASS_SIZE = 6
         MAX_PASS_SIZE = 20
 
+        if not Validator().validate_size(password, [MIN_PASS_SIZE, MAX_PASS_SIZE]):
+            return False, f"password size should between {MIN_PASS_SIZE} and {MAX_PASS_SIZE} inclusive"
+
         # avoid {*%;<>\{}[]+=?&,:'"` } and blank space
         valid_chars = {'-', '_', '.', '!', '@', '#', '$', '^', '&', '(', ')'}
         invalid_chars = set(punctuation + whitespace) - valid_chars
 
+        for char in invalid_chars:
+            if char in password:
+                return False, f"Password may have special character such as {valid_chars}"
+
         # Should have at least one number.
+        if Genetator().get_schar_count(password, digits) < 1:
+            return False, "Must include at least 1 digit"
+
         # Should have at least one uppercase and one lowercase character.
-        # Should have at least one special symbol. {!@#$^&()_.-},
+        if Genetator().get_schar_count(password, ascii_uppercase) < 1:
+            return False, "Must include at least 1 uppercase character"
 
-        # use bcrypt to hash the password
+        if Genetator().get_schar_count(password, ascii_lowercase) < 1:
+            return False, "Must include at least 1 lowercase"
 
-        pass
+        # Should have at least one special symbol. {!@#$^&()_.-}.
+        if Genetator().get_schar_count(password, valid_chars) < 1:
+            return False, f"Must include at least 1 special symbol such as {valid_chars}"
+
+        return password
 
     # def check_data(self, data):
     #     """ This will mysqli_real_escape_string, trim, striplashes and htmlspecialchars on
@@ -232,26 +270,3 @@ class Validator:
 #     """ returns the current time stamp in 'Y-m-d H:i:s' format """
 
 #     return date('Y-m-d H:i:s', strtotime('now'));
-
-
-# def validate_password(password):
-#     """ validates passwords
-#     password must be at least greater than or eqaul to eight in size,
-#     password must have at least an uppercase character,
-#     an lowercase character,
-#     a number and
-#     a special character.
-#     @param password
-#     @return bool """
-
-#     is_pwd_gte_8       = strlen(password) >= 8;
-#     has_uppercase_char = preg_match('@[A-Z]@', password);
-#     has_lowercase_char = preg_match('@[a-z]@', password);
-#     has_number         = preg_match('@[0-9]@', password);
-#     has_special_char   = preg_match('@[^\w]@', password);
-
-#     if (!is_pwd_gte_8 || !has_uppercase_char || !has_lowercase_char || !has_number || !has_special_char)
-#         return 0;
-
-
-#     return 1;
