@@ -26,9 +26,15 @@ class Genetator:
 
 class Validator:
 
-    def validate_size(self, data, recommended_size):
-        """ return is the size of the data is greater than or equal to the recommended size """
-        if len(data) >= recommended_size:
+    def validate_size(self, data, recommended_size=[6, 20]):
+        """ 
+        return is the size of the data is greater than or equal to the recommended size
+        By default, the recommended size is [6, 20]
+        Example: Validator().validate_size(data, [6, 20]).
+        Returs True if 6 <= size of data <= 20, else False.
+        """
+        data_size = len(data)
+        if recommended_size[0] <= data_size <= recommended_size[1]:
             return True
         return False
 
@@ -48,7 +54,8 @@ class Validator:
 
         # certain punctuations aren't allowed in an email except in a quote
         # except, space -  ' ' in a quoted local, the rest are unacceptable
-        valid_chars = {'-', '_', '.', '+'}
+        # learnt that + can be used in XSS so we'd remove it
+        valid_chars = {'-', '_', '.'}
         invalid_chars = set(punctuation + whitespace) - valid_chars
 
         # check if email is set, it is not an empty string
@@ -112,12 +119,37 @@ class Validator:
         conn.request("HEAD", "/")
         res = conn.getresponse()
 
-        if res.status == 200 and res.reason == "OK":
-            return True
-        return False
+        if res.status != 200 or res.reason != "OK":
+            return False
+        return True
 
-    # def is_valid_password(self, password):
-    #     pass
+    def is_valid_password(self, password):
+        """ returns True when the password  is valid, else False
+        # Conditions for a valid password are:
+         """
+        # Conditions for a valid password are:
+        if not password:
+            return False, f"password is empty"
+
+        # no leading or trailing while spaces spaces
+        password = password.strip()
+
+        # *Should be between 6 to 20 characters long. there is the notion of no max limit
+        # I think the size function should handle this
+        MIN_PASS_SIZE = 6
+        MAX_PASS_SIZE = 20
+
+        # avoid {*%;<>\{}[]+=?&,:'"` } and blank space
+        valid_chars = {'-', '_', '.', '!', '@', '#', '$', '^', '&', '(', ')'}
+        invalid_chars = set(punctuation + whitespace) - valid_chars
+
+        # Should have at least one number.
+        # Should have at least one uppercase and one lowercase character.
+        # Should have at least one special symbol. {!@#$^&()_.-},
+
+        # use bcrypt to hash the password
+
+        pass
 
     # def check_data(self, data):
     #     """ This will mysqli_real_escape_string, trim, striplashes and htmlspecialchars on
