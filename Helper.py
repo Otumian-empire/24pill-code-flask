@@ -1,7 +1,8 @@
 from datetime import datetime
 from http.client import HTTPSConnection as httpConn
 from random import randint
-from string import ascii_letters, punctuation, whitespace, ascii_lowercase, ascii_uppercase, digits
+from string import (ascii_letters, ascii_lowercase, ascii_uppercase, digits,
+                    punctuation, whitespace)
 
 
 class Genetator:
