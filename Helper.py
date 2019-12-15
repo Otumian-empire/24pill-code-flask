@@ -45,7 +45,7 @@ class Genetator:
 
     def get_bcrypt_hashed_passwd(self, password):
         # use bcrypt to hash the password
-        pass
+        return password
 
     def get_current_date_time(self):
         # get the current date and time
