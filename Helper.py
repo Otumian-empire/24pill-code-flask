@@ -1,11 +1,13 @@
-from string import {whitespace, punctuation, ascii_letters,
-                    ascii_lowercase, ascii_uppercase, digits}
-from random import randint
+from datetime import datetime
 from http.client import HTTPSConnection as httpConn
+from random import randint
+from string import ascii_letters, punctuation, whitespace, ascii_lowercase, ascii_uppercase, digits
 
 
 class Genetator:
+    """ Return generated values """
 
+    # this token is for the change of email and password
     def generate_token(self):
         """ returns a random alphanumeric characters, given the length of the data desired.
         this random token generator def is provided by Scott.
@@ -44,6 +46,16 @@ class Genetator:
     def get_bcrypt_hashed_passwd(self, password):
         # use bcrypt to hash the password
         pass
+
+    def get_current_date_time(self):
+        # get the current date and time
+        now = datetime.now()
+
+        # format the datetime using
+        # [month, day, year, hour, minute, sec]
+        # [%B, %d, %Y, %H, %M, %S] : December 2, 1996 - 13:24:20
+        # return now.strftime("A%, %d %B, %Y - %H:%M:%S")
+        return now.strftime("%B %d, %Y - %H:%M:%S")
 
 
 class Validator:
@@ -146,8 +158,15 @@ class Validator:
         return True
 
     def is_valid_password(self, password):
-        """ returns True when the password  is valid, else False
-        # Conditions for a valid password are:
+        """ returns True when the password  is valid, else False.
+        The password must satisfy these conditions:
+        * no leading or trailing while spaces spaces - so we strip them off
+        * Should be between 6 to 20 characters long
+        * must exclude any of these, {*%;<>\{}[]+=?&,:'"` } and blank space
+        * must have at least one number.
+        * must have at least one lowercase character.
+        * must have at least one upppercase character.
+        * must have at least one special symbol. {!@#$^&()_.-}.
          """
         # Conditions for a valid password are:
         if not password:
@@ -188,85 +207,3 @@ class Validator:
             return False, f"Must include at least 1 special symbol such as {valid_chars}"
 
         return password
-
-    # def check_data(self, data):
-    #     """ This will mysqli_real_escape_string, trim, striplashes and htmlspecialchars on
-    #     the args given to it
-    #     @param data """
-    #     print(punctuation.split())
-    #     # print(punctuation)
-    #     # for char in punctuation:
-    #     #     print(char)
-    #     #     data = '_'.join(data.split(char))
-    #     # return data
-
-
-# # there is an inbuilt seesion already
-# def check_session():
-
-#     if (!GLOBALS['db_connection'] || !isset(_SESSION['token']))
-#         return 0;
-
-#     return 1;
-
-
-# def set_session(data):
-#     """ check if session isn't started and start a new session
-#     else, set session with data
-#     @param data """
-#     session_destroy();
-#     session_start();
-#     _SESSION['token'] = data;
-
-# def generate_session_token(data):
-#     """ return generate a token for the session
-#     @param data """
-#         delimiter '____' was intensionally used
-#     return sha1(data) . "____" . data;
-
-
-# def get_user_email():
-#     """ return the users email based on the token set.
-#     explode the session token """
-
-#     if (!isset(_SESSION['token']))
-#         return 0;
-#     return explode("____", _SESSION['token'])[1];
-
-# def encode_data(data):
-#     """ return an encoded string making use of htmlentities and htmlspecialchars
-#     A rigorous version is check_data(data)
-#     @param data """
-
-
-#     return htmlentities(htmlspecialchars(mysqli_real_escape_string(db_connection, data)));
-
-
-# def decode_data(data):
-#     """ return a decoded string making use of htmlspecialchars and htmlentities """
-#     return htmlspecialchars_decode(html_entity_decode(data));
-
-
-# def has_token_expired(token_dormancy):
-#     """ return a boolean comparing, if the current time stamp is gt the time given to
-#     the token to expire.
-#     @param `token_dormancy`: the time given to the token to expire """
-
-#     # get the current time stamp
-#     now = date('Y-m-d H:i:s', strtotime('now'));
-#         and get token_dormancy, meaning, pass the token_dormancy
-
-#     return strtotime(now) >= strtotime(token_dormancy) ? 1 : 0;
-
-#         redirect_to token_field.php to return enter the new token as the old token
-#         has expired.
-
-# def get_dormancy_time():
-#     """ returns the token_dormancy period in `Y-m-d H:i:s` format """
-
-#     return date('Y-m-d H:i:s', strtotime('now') + (60  30));
-
-# def get_current_time():
-#     """ returns the current time stamp in 'Y-m-d H:i:s' format """
-
-#     return date('Y-m-d H:i:s', strtotime('now'));
