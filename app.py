@@ -130,13 +130,13 @@ def signup():
 
     flash(message, cat_filter)
 
-    return render_template('signup.html', message=message)
+    return render_template('signup.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # message = ''
-    # cat_filter = ''
+    message = 'lorem kljsklfhgsd kfhisdhfisoifabsdofiau'
+    cat_filter = 'danger'
 
     # if not request.form:
     #     message = "There is no request form"
@@ -155,9 +155,15 @@ def login():
     #             message = f"Your name is {input}"
     #             cat_filter = "success"
 
-    # flash(message, cat_filter)
-    # return render_template('test.html', message=message)
+    flash(message, cat_filter)
     return render_template('login.html')
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Logout successfull", "success")
+    return redirect(url_for("login"))
 
 
 @app.route('/update_article')

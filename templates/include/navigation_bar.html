@@ -1,8 +1,7 @@
 <!-- we add a notification div -->
-<div id="notification" class="notification fixed-top text-lowercase"></div>
-
+<!-- notification fixed-top -->
 <!-- nav starts here -->
-<div class="navigation-bar container-fluid col-sm-12 col-md-12 col-lg-12 navbar navbar-expand-lg box fixed-top text-capitalize">
+<div class="navigation-bar container-fluid col-sm-12 col-md-12 col-lg-12 navbar navbar-expand-lg box  text-capitalize">
 
     <!-- logo -->
     <div class="col-sm-1 col-md-1 col-lg-1 mx-auto">
@@ -32,12 +31,13 @@
 	<div class="col-sm-3 col-md-3 col-lg-3 mx-auto">
     
         <!-- check if there is session -->
-        {% if True %}
-
+        {% if session.token and session.email %}
             <a class="btn btn-sm btn-outline-primary" href="/user_profile">My account</a>
             <a class="btn btn-sm btn-outline-primary" href="/write_article">write article</a>
-            <a class="btn btn-sm btn-outline-primary" href="/">Log out</a>
-            
+            <a class="btn btn-sm btn-outline-primary" href="/logout">Log out</a>
+        {% else %}
+            <a class="btn btn-sm btn-outline-primary" href="/signup">Register</a>
+            <a class="btn btn-sm btn-outline-primary" href="/login">Log in</a>
         {% endif %}
         
     </div>
