@@ -163,28 +163,34 @@ def login():
                         message = "Check password length, 6 - 20"
 
                     else:
-                        hashed_passwd = Gen().get_bcrypt_hashed_passwd(password)
+                        hashed_password = Gen().get_bcrypt_hashed_passwd(password)
 
                         connection = ssqlite(DATABASE_NAME)
                         sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
 
                         user_password = connection.run_query(
-                            sql_query, email).fetchone()[0]
+                            sql_query, email).fetchone()
 
-                        if not user_password == hashed_passwd:
-                            message = "Error"
+                        if user_password != None:
+                            if user_password[0] != hashed_password:
+                                message = "Invalid credentials..."
 
+                            else:
+                                # create a session
+                                session["token"] = Gen().generate_token()
+                                session["email"] = email
+
+                                # success
+                                message = "login successfull"
+                                cat_filter = "success"
+
+                                # redirect to index page
+                                return redirect(url_for('index'))
                         else:
-                            # create a session
-                            session["token"] = Gen().generate_token()
-                            session["email"] = email
-
-                            # success
-                            message = "login successfull"
-                            cat_filter = "success"
-
-                            # redirect to index page
-                            return redirect(url_for('index'))
+                            # redirect user to sign up page with the email
+                            message = "Kindly login, strange credentials..."
+                            # redirect(url_for(f"signup?email={email}"))
+                            # pass
 
                         # stamp the database - commit the changes and close connection
                         connection.stamp()
