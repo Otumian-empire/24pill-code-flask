@@ -135,25 +135,62 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    message = 'lorem kljsklfhgsd kfhisdhfisoifabsdofiau'
+    message = ''
     cat_filter = 'danger'
 
-    # if not request.form:
-    #     message = "There is no request form"
-    #     cat_filter = "danger"
-    # else:
-    #     if request.method != 'POST':
-    #         message = 'Request method is not POST'
-    #         cat_filter = "danger"
-    #     else:
-    #         if not request.form.get('input') or not request.form.get('btn_submit'):
-    #             message = 'There are empty fields, please fill them out'
-    #             cat_filter = "danger"
-    #         else:
-    #             input = request.form.get('input')
-    #             # do some verification and validation
-    #             message = f"Your name is {input}"
-    #             cat_filter = "success"
+    if request.form and request.method != 'POST':
+        message = 'Request method is not POST'
+
+    else:
+        if (
+                not request.form.get('login_email') or
+                not request.form.get('login_password') or
+                not request.form.get('login_button')):
+
+            message = 'There are empty fields, please fill them out'
+
+        else:
+            email = request.form.get('login_email')
+
+            if Val().is_email_valid(email):
+                password = request.form.get('login_password')
+
+                if not Val().is_valid_password(password):
+                    message = "Invalid password format"
+
+                else:
+                    if not Val().validate_size(password):
+                        message = "Check password length, 6 - 20"
+
+                    else:
+                        hashed_passwd = Gen().get_bcrypt_hashed_passwd(password)
+
+                        connection = ssqlite(DATABASE_NAME)
+                        sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
+
+                        user_password = connection.run_query(
+                            sql_query, email).fetchone()[0]
+
+                        if not user_password == hashed_passwd:
+                            message = "Error"
+
+                        else:
+                            # create a session
+                            session["token"] = Gen().generate_token()
+                            session["email"] = email
+
+                            # success
+                            message = "login successfull"
+                            cat_filter = "success"
+
+                            # redirect to index page
+                            return redirect(url_for('index'))
+
+                        # stamp the database - commit the changes and close connection
+                        connection.stamp()
+
+            else:
+                message = "Invalide email format"
 
     flash(message, cat_filter)
     return render_template('login.html')
