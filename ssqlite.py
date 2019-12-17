@@ -21,18 +21,14 @@ class ssqlite:
 
     def run_query(self, sql_query='', *parameters):
         """
-        return True if a query was executed successfull, else False.
+        return the cursor object if a query was executed successfull, else may raise an exception.
+        You may call fetchone, fetchall or fetchmany to read your data.
         """
 
         if not self.cursor:
             raise BaseException("Database not selected")
 
-        query_result = self.cursor.execute(sql_query, parameters)
-
-        if query_result.rowcount < 1:
-            return False
-
-        return query_result
+        return self.cursor.execute(sql_query, parameters)
 
     def stamp(self):
         """ commit and close the connection to the database.
