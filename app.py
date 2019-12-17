@@ -54,8 +54,9 @@ def forget_password():
     return render_template('forget_password.html')
 
 
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
+@app.route('/signup/', methods=['GET', 'POST'])
+@app.route('/signup/<string:email>', methods=['GET', 'POST'])
+def signup(email=''):
     message = ''
     cat_filter = "danger"
 
@@ -130,7 +131,7 @@ def signup():
 
     flash(message, cat_filter)
 
-    return render_template('signup.html')
+    return render_template('signup.html', email=email)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -188,9 +189,8 @@ def login():
                                 return redirect(url_for('index'))
                         else:
                             # redirect user to sign up page with the email
-                            message = "Kindly login, strange credentials..."
-                            # redirect(url_for(f"signup?email={email}"))
-                            # pass
+                            # message = "Kindly login, strange credentials..."
+                            return redirect(url_for('signup', email=email))
 
                         # stamp the database - commit the changes and close connection
                         connection.stamp()
