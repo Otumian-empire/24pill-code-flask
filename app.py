@@ -16,6 +16,13 @@ DATABASE_NAME = "pill_code_db.db"
 @app.route('/')
 @app.route('/index')
 def index():
+    db_conn = ssqlite(DATABASE_NAME)
+    articles = db_conn.run_query(
+        "SELECT * FROM `articles` ORDER BY `post_date` DESC").fetchall()
+
+    if articles != None:
+        return render_template("index.html", articles=articles)
+
     return render_template("index.html")
 
 
@@ -112,8 +119,6 @@ def signup(email=''):
                                 message = "Error"
 
                             else:
-                                # stamp the database - commit the changes and close connection
-                                connection.stamp()
 
                                 # create a session
                                 session["token"] = Gen().generate_token()
@@ -125,6 +130,9 @@ def signup(email=''):
 
                                 # redirect to index page
                                 return redirect(url_for('index'))
+
+                            # stamp the database - commit the changes and close connection
+                            connection.stamp()
 
                 else:
                     message = "Invalide email format"
@@ -226,7 +234,9 @@ def user_profile():
 
 @app.route('/write_article', methods=['GET', 'POST'])
 def write_article():
-    if session['token']:
+    # instead of trying to get the session['token'], we rather check if there is 'token'
+    # as a key in the session global dictionary
+    if 'token' in session:
         user_email = session['email']
 
         message = ''

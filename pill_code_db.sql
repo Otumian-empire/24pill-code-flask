@@ -24,10 +24,11 @@ CREATE TABLE IF NOT EXISTS `comments` (
 	`user_email`	TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS `articles` (
-	`post_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	`post_title`	TEXT NOT NULL,
+	`post_id`	INTEGER NOT NULL,
+	`post_title`	TEXT NOT NULL UNIQUE,
 	`post_content`	TEXT NOT NULL,
 	`user_email`	TEXT NOT NULL,
-	`post_date`	TEXT NOT NULL
+	`post_date`	TEXT NOT NULL,
+	PRIMARY KEY(`post_id`)
 );
 COMMIT;

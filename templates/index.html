@@ -15,42 +15,41 @@
 
         <!-- loop through the article -->
         <div class="article">
-
+            {% if articles %}
+            {% for article in articles %}
             <!-- title -->
-            <h2>Title</h2>
+            <h2>{{article[1]}}</h2>
 
             <!-- date and author's email-->
             <i class="fa fa-calendar"></i>
-            <span class="mr-2">Date and time</span>
+            <span class="mr-2">{{article[4]}}</span>
             <i class="fa fa-user"></i>
-            <span class="">User</span>
+            <span class="">{{article[3]}}</span>
             <br>
             <hr>
 
             <!-- content -->
-            <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Enim culpa fugiat nemo voluptates odio pariatur
-                obcaecati doloribus? Magni quo libero corporis, ea, aliquam est, asperiores assumenda nobis quia id eos.
-                Incidunt in cum explicabo consequatur molestiae reiciendis harum illo mollitia. Enim sequi hic a
-                incidunt eligendi eaque libero deleniti! Expedita fugit inventore deserunt aperiam obcaecati officia
-                enim, fuga quis blanditiis!
-                Repellat accusantium dicta itaque ex fugiat quidem sit tenetur doloribus facilis. Ipsa aliquam corrupti
-                doloremque perferendis ex illum minima quaerat temporibus. Iure voluptate suscipit molestias? Quisquam
-                maiores unde quia nobis.<a href="/article"><span>more</span></a></p>
+            <p>{{article[2]}}<a href="/article/{{article[0]}}"><span>... interract</span></a></p>
             <!-- add article id -->
+            {% endfor %}
+            {% else %}
+            <div class="card mx-auto mt-5 card-register text-center">
 
-        </div>
+                <div class="card-header text-uppercase">NO Articles</div>
 
-        <div class="card mx-auto mt-5 card-register text-center">
+                <div class="card-body text-lowercase">
+                    <p>sorry no articles here yet!! <a href="/write_article">Add</a> an article..</p>
+                </div>
 
-            <div class="card-header text-uppercase">NO Articles</div>
-
-            <div class="card-body text-lowercase">
-                <p>sorry no articles here yet!! <a href="/write_article">Add</a> an article..</p>
             </div>
+            {% endif %}
+
+
+
+
+
 
         </div>
-
-        <!-- <?php endif; ?> -->
 
     </div>
 
