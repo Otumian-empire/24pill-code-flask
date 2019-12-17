@@ -11,7 +11,8 @@
 		<form action="" method="post">
 
 			<input class="form-control rounded-0" type="text" name="post_title" id="" placeholder="article header.."
-				value="" autofocus />
+				value="{% if request.form.get('post_title') %}{{ request.form.get('post_title') }}{% endif %}"
+				autofocus />
 			<!-- TODO: find a better way to add the key words -->
 			<!-- look into controllers/write_article_processor.php -->
 
@@ -19,10 +20,11 @@
 			<div class="text-area">
 
 				<textarea name="post_content" id="post_content" class="p-1 md-textarea form-control rounded-0" rows="3"
-					placeholder="article body.." value=""></textarea>
+					placeholder="article body.."
+					value="">{% if request.form.get('post_content') %}{{ request.form.get('post_content') }}{% endif %}</textarea>
 
 				<br>
-				<button name="post_submit_button" type="submit" class="btn btn-success btn-block">POST ARTICLE</button>
+				<button name="post_submit_button" type="submit" class="btn btn-success btn-block" value="submit_article">POST ARTICLE</button>
 
 			</div>
 

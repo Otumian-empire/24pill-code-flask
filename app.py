@@ -224,8 +224,63 @@ def user_profile():
     return render_template('user_profile.html')
 
 
-@app.route('/write_article')
+@app.route('/write_article', methods=['GET', 'POST'])
 def write_article():
+    if session['token']:
+        user_email = session['email']
+
+        message = ''
+        cat_filter = "danger"
+
+        if not request.form:
+            message = "There is no request form"
+
+        else:
+            if request.method != 'POST':
+                message = 'Request method is not POST'
+
+            else:
+                if (
+                        not request.form.get('post_title') or
+                        not request.form.get('post_content') or
+                        not request.form.get('post_submit_button')):
+
+                    message = 'There are empty fields, please fill them out'
+                    print(request.form.get('post_title'), request.form.get(
+                        'post_content'), request.form.get('post_submit_button'))
+
+                else:
+                    post_title = request.form.get('post_title')
+                    post_content = request.form.get('post_content')
+
+                    # if post_title == "" or post_content == "":
+                    #     message = ""
+                    # need some validation and verification
+
+                    connection = ssqlite(DATABASE_NAME)
+
+                    sql_query = "INSERT INTO `articles`(`post_title`, `post_content`, `user_email`, `post_date`) VALUES(?, ?, ?, ?)"
+                    post_date = Gen().get_current_date_time()
+
+                    result = connection.run_query(
+                        sql_query, post_title, post_content, user_email, post_date)
+
+                    # stamp the database - commit the changes and close connection
+                    connection.stamp()
+
+                    # success
+                    message = "article added successfully"
+                    cat_filter = "success"
+
+                    # redirect to index page
+                    return redirect(url_for('index'))
+
+    else:
+        message = "Please login first"
+        return redirect(url_for('login'))
+
+    flash(message, cat_filter)
+
     return render_template('write_article.html')
 
 

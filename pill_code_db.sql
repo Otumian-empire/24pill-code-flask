@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS `users` (
 	`user_last_name`	TEXT NOT NULL,
 	`user_email`	TEXT NOT NULL UNIQUE,
 	`user_password`	TEXT NOT NULL,
-	`user_bio`	INTEGER NOT NULL,
-	`user_register_date`	INTEGER NOT NULL
+	`user_bio`	TEXT NOT NULL,
+	`user_register_date`	TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS `tokens` (
 	`token_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `articles` (
 	`post_id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`post_title`	TEXT NOT NULL,
 	`post_content`	TEXT NOT NULL,
-	`post_date`	TEXT NOT NULL,
-	`user_email`	TEXT NOT NULL
+	`user_email`	TEXT NOT NULL,
+	`post_date`	TEXT NOT NULL
 );
 COMMIT;
