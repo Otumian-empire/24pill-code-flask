@@ -1,7 +1,7 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 
-from Helper import Genetator as Gen
+from Helper import Geretator as Gen
 from Helper import Validator as Val
 from ssqlite import ssqlite
 
@@ -13,6 +13,7 @@ app.secret_key = "12345"  # use a better secret_key
 DATABASE_NAME = "pill_code_db.db"
 
 
+# index/home page
 @app.route('/')
 @app.route('/index')
 def index():
@@ -26,55 +27,10 @@ def index():
     return render_template("index.html")
 
 
+# static pages
 @app.route('/about')
 def about():
     return render_template("about.html")
-
-
-@app.route('/articles')
-def all_articles():
-
-    articles = ''
-
-    connection = ssqlite(DATABASE_NAME)
-
-    sql_query = "SELECT `post_id`, `post_title`, `user_email`,`post_date` FROM `articles` ORDER BY `post_id` DESC"
-
-    result = connection.run_query(sql_query)
-
-    if result:
-        articles = result.fetchall()
-
-    connection.stamp()
-
-    return render_template('all_articles.html', articles=articles)
-
-
-@app.route('/article/<string:id>/')
-def article(id):
-    article = []
-    comments = []
-
-    post_id = id
-
-    db_conn = ssqlite(DATABASE_NAME)
-
-    sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
-    article_result = db_conn.run_query(sql_query, post_id)
-
-    if article_result:
-        article = article_result.fetchone()
-
-        sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
-        comments_result = db_conn.run_query(sql_query, post_id)
-
-        if comments_result:
-            comments = comments_result.fetchall()
-
-    else:
-        redirect(url_for('articles'))
-
-    return render_template('/article.html', article=article, comments=comments)
 
 
 @app.route('/contact')
@@ -82,9 +38,15 @@ def contact():
     return render_template('contact.html')
 
 
+# account settings
 @app.route('/email_token')
 def email_token():
     return render_template('email_token_field.html')
+
+
+@app.route('/user_profile')
+def user_profile():
+    return render_template('user_profile.html')
 
 
 @app.route('/password_token')
@@ -97,6 +59,28 @@ def forget_password():
     return render_template('forget_password.html')
 
 
+@app.route('/delete_user')
+def delete_user():
+    pass
+
+
+# comments
+@app.route('/update_comment')
+def update_comment():
+    return render_template('update_comment.html')
+
+
+@app.route('/comment/delete/<string:id>')
+def delete_comment(id):
+    pass
+
+
+@app.route('/comment/update/<string:id>')
+def update_comment(id):
+    pass
+
+
+# signup, login and logout
 @app.route('/signup/', methods=['GET', 'POST'])
 @app.route('/signup/<string:email>', methods=['GET', 'POST'])
 def signup(email=''):
@@ -253,22 +237,65 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route('/update_article')
-def update_article():
+# articles
+@app.route('/article')
+@app.route('/articles')
+def all_articles():
+
+    articles = ''
+
+    connection = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `post_id`, `post_title`, `user_email`,`post_date` FROM `articles` ORDER BY `post_id` DESC"
+
+    result = connection.run_query(sql_query)
+
+    if result:
+        articles = result.fetchall()
+
+    connection.stamp()
+
+    return render_template('all_articles.html', articles=articles)
+
+
+@app.route('/article/read/<string:id>/')
+def read_article(id):
+    article = []
+    comments = []
+
+    post_id = id
+
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
+    article_result = db_conn.run_query(sql_query, post_id)
+
+    if article_result:
+        article = article_result.fetchone()
+
+        sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
+        comments_result = db_conn.run_query(sql_query, post_id)
+
+        if comments_result:
+            comments = comments_result.fetchall()
+
+    else:
+        redirect(url_for('articles'))
+
+    return render_template('/article.html', article=article, comments=comments)
+
+
+@app.route("/article/delete/<string:id>")
+def delete_article(id):
+    pass
+
+
+@app.route('/article/update/<string:id>', methods=['GET', 'POST'])
+def update_article(id):
     return render_template('update_article.html')
 
 
-@app.route('/update_comment')
-def update_comment():
-    return render_template('update_comment.html')
-
-
-@app.route('/user_profile')
-def user_profile():
-    return render_template('user_profile.html')
-
-
-@app.route('/write_article', methods=['GET', 'POST'])
+@app.route('/article/write', methods=['GET', 'POST'])
 def write_article():
     # instead of trying to get the session['token'], we rather check if there is 'token'
     # as a key in the session global dictionary

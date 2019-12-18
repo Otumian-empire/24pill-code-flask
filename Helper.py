@@ -5,7 +5,7 @@ from string import (ascii_letters, ascii_lowercase, ascii_uppercase, digits,
                     punctuation, whitespace)
 
 
-class Genetator:
+class Geretator:
     """ Return generated values """
 
     # this token is for the change of email and password
@@ -193,18 +193,18 @@ class Validator:
                 return False, f"Password may have special character such as {valid_chars}"
 
         # Should have at least one number.
-        if Genetator().get_schar_count(password, digits) < 1:
+        if Geretator().get_schar_count(password, digits) < 1:
             return False, "Must include at least 1 digit"
 
         # Should have at least one uppercase and one lowercase character.
-        if Genetator().get_schar_count(password, ascii_uppercase) < 1:
+        if Geretator().get_schar_count(password, ascii_uppercase) < 1:
             return False, "Must include at least 1 uppercase character"
 
-        if Genetator().get_schar_count(password, ascii_lowercase) < 1:
+        if Geretator().get_schar_count(password, ascii_lowercase) < 1:
             return False, "Must include at least 1 lowercase"
 
         # Should have at least one special symbol. {!@#$^&()_.-}.
-        if Genetator().get_schar_count(password, valid_chars) < 1:
+        if Geretator().get_schar_count(password, valid_chars) < 1:
             return False, f"Must include at least 1 special symbol such as {valid_chars}"
 
         return password
