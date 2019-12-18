@@ -2,23 +2,25 @@
 {% block body %}
 <div class="index-body container">
 
-    {% if True %}
-    <div class="article">
-        <a href="/article">
-            <!-- title -->
-            <h2>Header</h2>
-        </a>
+    {% if articles %}
+        {% for article in articles %}
+            <div class="article">
+                <a href="/article/{{ article[0] }}">
+                    <!-- title -->
+                    <h2>{{ article[1]}}</h2>
+                </a>
+            
+                <!-- date and author's email-->
+                <i class="fa fa-calendar"></i>
+                <span class="mr-2">{{article[3]}}</span>
+                <i class="fa fa-user"></i>
+                <span class="">{{article[2]}}</span>
+            
+            </div>
+        {% endfor %}
 
-        <!-- date and author's email-->
-        <i class="fa fa-calendar"></i>
-        <span class="mr-2">Date and email</span>
-        <i class="fa fa-user"></i>
-        <span class="">Some basic info</span>
-
-    </div>
-    {%
-        else
-     %} <div class="card mx-auto mt-5 card-register text-center">
+    {% else %}
+    <div class="card mx-auto mt-5 card-register text-center">
 
         <div class="card-header text-uppercase">NO Articles</div>
 

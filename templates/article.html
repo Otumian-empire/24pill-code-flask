@@ -3,71 +3,117 @@
 <div class="index-body container">
 
 	<div class="container">
+		{% if article %}
 
 		<!-- post -->
 		<div class="article">
 
 			<!-- title -->
-			<h2>post_title</h2>
+			<h2>{{article[1]}}</h2>
+			{% if session.token and (session.email == article[3]) %}
+			<span class="mr-2"><a href="/update_article/{{article[0]}}" class="btn btn-sm btn-success">
+					UPDATE
+				</a></span>
+			<span class="mr-2"><a href="/delete_article/{{article[0]}}" class="btn btn-sm btn-danger"> DELETE
+				</a></span>
+			{% endif %}
 
 			<!-- date and author's email-->
 			<i class="fa fa-calendar"></i>
-			<span>2-5-19</span>
+			<span>{{article[4]}}</span>
 			<i class="fa fa-user"></i>
-			<span>hi@email.com</span>
+			<span>{{article[3]}}</span>
 			<br>
 			<hr>
 
 			<!-- content -->
-			<div>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Modi accusantium a veritatis rerum voluptates
-				libero unde maiores, dolorem voluptatibus minima, sapiente saepe officiis ipsam atque tempore.
-				Doloremque eius ullam consectetur?Lorem ipsum dolor sit amet consectetur adipisicing elit. In, dolorem?
-				Sed dolorum nostrum rem commodi earum, velit itaque quasi laborum explicabo quaerat officia unde
-				laudantium accusamus ad minus omnis deleniti!</div>
-			<br><br>
+			<div>{{article[2]}}</div>
+		</div>
 
-			<!-- comment -->
-			{% if True %}
-			<div class="card card-login mx-auto mt-1">
-				<div class="card-header text-center text-capitalize">
-					You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here to add a comment!!
+		<br><br>
+
+		<!-- check session here -->
+		<!-- comment -->
+		{% if not session.token or not session.email %}
+		<div class="card card-login mx-auto mt-1">
+			<div class="card-header text-center text-capitalize">
+				You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here to add a comment!!
+			</div>
+		</div>
+		{% else %}
+
+		<div class="text-area">
+			<div class="card-header">Add Comment</div>
+
+			<form action="" method="post">
+				<textarea class="comment-box p-1 md-textarea form-control rounded-0"
+					placeholder="Place your comments here" type="textarea" id="comment-box"
+					name="comment-box"></textarea>
+				<br>
+
+				<div class="input-group">
+					<button class="btn btn-success btn-block" id="add-comment-btn" name="add-comment-btn">ADD</button>
 				</div>
-			</div>
-			{% endif %}
 
-			<div class="text-area">
-				<div class="card-header">Add Comment</div>
-
-				<form action="" method="post">
-					<textarea class="comment-box p-1 md-textarea form-control rounded-0"
-						placeholder="Place your comments here" type="textarea" id="comment-box"
-						name="comment-box"></textarea>
-					<br>
-
-					<div class="input-group">
-						<button class="btn btn-success btn-block" id="add-comment-btn"
-							name="add-comment-btn">ADD</button>
-					</div>
-
-				</form>
-
-			</div>
+			</form>
 
 		</div>
 
 		<!-- read comments from db on the page -->
-
 		<!-- comment -->
+		<!-- comment_id, post_id, comment_text, comment_date, user_email -->
 		<div class="comments article">
+			<ul class="comments-list">
+				{% if comments %}
 
-			<ul class="comments-list"></ul>
+				{% for comment in comments %}
+				<li class='comments-list-item p-1 m-2'>
+					<div>
+						{% if session.token and (session.email == comment[4]) %}
+						<span>
+							<!-- edit comment -->
+							<span class='mr-2'><a href='/update_comment/{{comment[0]}}'
+									class="btn btn-sm btn-primary">EDIT
+								</a></span>
+
+							<!-- delete comment -->
+							<span class='mr-2'><a href='/delete_comment/{{comment[0]}}' class="btn btn-sm btn-danger">
+									DELETE </a></span>
+						</span>
+						{%  endif %}
+
+						<!-- comment_date -->
+						<i class="fa fa-calendar"></i>
+						<span class=''>{{comment[3]}}</span>
+
+						<!-- user_email -->
+						<i class="fa fa-user"></i>
+						<span class='mr-2'>{{comment[4]}}</span>
+
+						<!-- comment_text -->
+						<p>{{comment[2]}}</p>
+
+						<!-- comment_id, just goofying -->
+						<span class=''>{{comment[0]}}-{{Gen().generate_token()}}</span>
+
+					</div>
+				</li>
+				{% endfor %}
+				<br>
+				<div class="clearfix"></div>
+
+				{% endif %}
+			</ul>
 
 		</div>
+
+		{% endif %}
+
+		{% endif %}
 
 	</div>
 
 </div>
-
 
 <script src="url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
 <script>

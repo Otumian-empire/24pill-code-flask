@@ -33,12 +33,48 @@ def about():
 
 @app.route('/articles')
 def all_articles():
-    return render_template('all_articles.html')
+
+    articles = ''
+
+    connection = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `post_id`, `post_title`, `user_email`,`post_date` FROM `articles` ORDER BY `post_id` DESC"
+
+    result = connection.run_query(sql_query)
+
+    if result:
+        articles = result.fetchall()
+
+    connection.stamp()
+
+    return render_template('all_articles.html', articles=articles)
 
 
 @app.route('/article/<string:id>/')
 def article(id):
-    return render_template('/article.html')
+    article = []
+    comments = []
+
+    post_id = id
+
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
+    article_result = db_conn.run_query(sql_query, post_id)
+
+    if article_result:
+        article = article_result.fetchone()
+
+        sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
+        comments_result = db_conn.run_query(sql_query, post_id)
+
+        if comments_result:
+            comments = comments_result.fetchall()
+
+    else:
+        redirect(url_for('articles'))
+
+    return render_template('/article.html', article=article, comments=comments)
 
 
 @app.route('/contact')
