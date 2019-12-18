@@ -33,56 +33,57 @@ def about():
     return render_template("about.html")
 
 
-@app.route('/contact')
+@app.route('/contact', methods=['GET', 'POST'])
+# add a basic form so that users can communicate with you
 def contact():
     return render_template('contact.html')
 
 
 # account settings
-@app.route('/email_token')
+@app.route('/email_token', methods=['GET', 'POST'])
 def email_token():
     return render_template('email_token_field.html')
 
 
-@app.route('/user_profile')
+@app.route('/user_profile', methods=['GET', 'POST'])
 def user_profile():
     return render_template('user_profile.html')
 
 
-@app.route('/password_token')
+@app.route('/password_token', methods=['GET', 'POST'])
 def password_token():
     return render_template('password_token_field.html')
 
 
-@app.route('/forget_password')
+@app.route('/forget_password', methods=['GET', 'POST'])
 def forget_password():
     return render_template('forget_password.html')
 
 
-@app.route('/delete_user')
+@app.route('/delete_user/<string:email>', methods=['GET', 'POST'])
 def delete_user():
     pass
 
 
 # comments
-@app.route('/update_comment')
-def update_comment():
-    return render_template('update_comment.html')
+@app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
+def write_comment():
+    pass
 
 
-@app.route('/comment/delete/<string:id>')
+@app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
 def delete_comment(id):
     pass
 
 
-@app.route('/comment/update/<string:id>')
+@app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(id):
     pass
 
 
 # signup, login and logout
-@app.route('/signup/', methods=['GET', 'POST'])
-@app.route('/signup/<string:email>', methods=['GET', 'POST'])
+@app.route('/account/signup/', methods=['GET', 'POST'])
+@app.route('/account/signup/<string:email>', methods=['GET', 'POST'])
 def signup(email=''):
     message = ''
     cat_filter = "danger"
@@ -162,8 +163,9 @@ def signup(email=''):
     return render_template('signup.html', email=email)
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/account/login/', methods=['GET', 'POST'])
+@app.route('/account/login/<string:email>', methods=['GET', 'POST'])
+def login(email=''):
     message = ''
     cat_filter = 'danger'
 
@@ -230,7 +232,7 @@ def login():
     return render_template('login.html')
 
 
-@app.route("/logout")
+@app.route("/account/logout")
 def logout():
     session.clear()
     flash("Logout successfull", "success")
@@ -300,7 +302,7 @@ def write_article():
     # instead of trying to get the session['token'], we rather check if there is 'token'
     # as a key in the session global dictionary
     if 'token' in session:
-        user_email = session['email']
+        user_email = session.get('email')
 
         message = ''
         cat_filter = "danger"

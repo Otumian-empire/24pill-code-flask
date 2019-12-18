@@ -6,41 +6,44 @@
     <!-- logo -->
     <div class="col-sm-1 col-md-1 col-lg-1 mx-auto">
         <a class="navbar-brand col-sm-12 col-md-12 col-lg-12" href="/">
-            <img src="{{url_for('static', filename='img/24pill-code-blue.png')}}" alt="logo-brand" width="40" height="30">
+            <img src="{{url_for('static', filename='img/24pill-code-blue.png')}}" alt="logo-brand" width="40"
+                height="30">
         </a>
     </div>
-	
+
     <!-- nav links -->
     <div class="col-sm-2 col-md-2 col-lg-2 mx-auto">
         <a class="btn btn-sm btn-outline-primary" href="/">Recent</a>
-        <a class="btn btn-sm btn-outline-primary" href="/articles?msg=all articles">Articles</a>
+        <a class="btn btn-sm btn-outline-primary" href="/articles">Articles</a>
     </div>
-    
+
     <!-- search bar -->
-     <div class="input-group col-sm-6 col-md-6 col-lg-6">
+    <div class="input-group col-sm-6 col-md-6 col-lg-6">
         <form action="" method="get" class="form-inline col-sm col-md col-lg">
-            <input class="form-control-sm border border-right-0 col" type="search" placeholder="search by title, tag and or email" id="example-search-input" name="search_query">
+            <input class="form-control-sm border border-right-0 col" type="search"
+                placeholder="search by title, tag and or email" id="example-search-input" name="search_query">
             <span class="input-group-append">
-                <button class="btn btn-sm btn-outline-secondary border-left-0 border" type="submit" name="search_button">
-                <i class="fa fa-search"></i></button>
+                <button class="btn btn-sm btn-outline-secondary border-left-0 border" type="submit"
+                    name="search_button">
+                    <i class="fa fa-search"></i></button>
             </span>
         </form>
     </div>
 
     <!-- write article, logout, user profile -->
-	<div class="col-sm-3 col-md-3 col-lg-3 mx-auto">
-    
+    <div class="col-sm-3 col-md-3 col-lg-3 mx-auto">
+
         <!-- check if there is session -->
         {% if session.token and session.email %}
-            <a class="btn btn-sm btn-outline-primary" href="/user_profile">My account</a>
-            <a class="btn btn-sm btn-outline-primary" href="/write_article">write article</a>
-            <a class="btn btn-sm btn-outline-primary" href="/logout">Log out</a>
+        <a class="btn btn-sm btn-outline-primary" href="/user_profile">My account</a>
+        <a class="btn btn-sm btn-outline-primary" href="/article/write">write article</a>
+        <a class="btn btn-sm btn-outline-primary" href="/account/logout">Log out</a>
         {% else %}
-            <a class="btn btn-sm btn-outline-primary" href="/signup">Register</a>
-            <a class="btn btn-sm btn-outline-primary" href="/login">Log in</a>
+        <a class="btn btn-sm btn-outline-primary" href="/account/signup/">Register</a>
+        <a class="btn btn-sm btn-outline-primary" href="/account/login/">Log in</a>
         {% endif %}
-        
+
     </div>
-    
+
 </div>
 <!-- navigation bar ends here -->

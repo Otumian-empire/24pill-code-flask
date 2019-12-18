@@ -11,10 +11,10 @@
 			<!-- title -->
 			<h2>{{article[1]}}</h2>
 			{% if session.token and (session.email == article[3]) %}
-			<span class="mr-2"><a href="/update_article/{{article[0]}}" class="btn btn-sm btn-success">
+			<span class="mr-2"><a href="/article/update/{{article[0]}}" class="btn btn-sm btn-success">
 					UPDATE
 				</a></span>
-			<span class="mr-2"><a href="/delete_article/{{article[0]}}" class="btn btn-sm btn-danger"> DELETE
+			<span class="mr-2"><a href="/article/delete/{{article[0]}}" class="btn btn-sm btn-danger"> DELETE
 				</a></span>
 			{% endif %}
 
@@ -37,7 +37,7 @@
 		{% if not session.token or not session.email %}
 		<div class="card card-login mx-auto mt-1">
 			<div class="card-header text-center text-capitalize">
-				You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here to add a comment!!
+				You can <a href="/account/login/" class="btn btn-sm btn-primary">Login</a> here to add a comment!!
 			</div>
 		</div>
 		{% else %}
@@ -45,7 +45,7 @@
 		<div class="text-area">
 			<div class="card-header">Add Comment</div>
 
-			<form action="" method="post">
+			<form action="/comment/write/{{article[0]}}" method="post">
 				<textarea class="comment-box p-1 md-textarea form-control rounded-0"
 					placeholder="Place your comments here" type="textarea" id="comment-box"
 					name="comment-box"></textarea>
@@ -72,12 +72,12 @@
 						{% if session.token and (session.email == comment[4]) %}
 						<span>
 							<!-- edit comment -->
-							<span class='mr-2'><a href='/update_comment/{{comment[0]}}'
+							<span class='mr-2'><a href='/comment/update/{{comment[0]}}'
 									class="btn btn-sm btn-primary">EDIT
 								</a></span>
 
 							<!-- delete comment -->
-							<span class='mr-2'><a href='/delete_comment/{{comment[0]}}' class="btn btn-sm btn-danger">
+							<span class='mr-2'><a href='/comment/delete/{{comment[0]}}' class="btn btn-sm btn-danger">
 									DELETE </a></span>
 						</span>
 						{%  endif %}

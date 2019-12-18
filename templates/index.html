@@ -6,7 +6,7 @@
     {% if not session.token or not session.email %}
     <div class="card card-login mx-auto mt-1">
         <div class="card-header text-center text-capitalize">
-            You can <a href="/login" class="btn btn-sm btn-primary">Login</a> here!!
+            You can <a href="/account/login/" class="btn btn-sm btn-primary">Login</a> here!!
         </div>
     </div>
     {% endif %}
@@ -29,7 +29,7 @@
             <hr>
 
             <!-- content -->
-            <p>{{article[2]}}<a href="/article/{{article[0]}}"><span>... interract</span></a></p>
+            <p>{{article[2]}}<a href="/article/read/{{article[0]}}"><span>... interract</span></a></p>
             <!-- add article id -->
             {% endfor %}
             {% else %}
@@ -38,16 +38,11 @@
                 <div class="card-header text-uppercase">NO Articles</div>
 
                 <div class="card-body text-lowercase">
-                    <p>sorry no articles here yet!! <a href="/write_article">Add</a> an article..</p>
+                    <p>sorry no articles here yet!! <a href="/article/write">Add</a> an article..</p>
                 </div>
 
             </div>
             {% endif %}
-
-
-
-
-
 
         </div>
 
