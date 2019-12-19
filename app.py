@@ -194,7 +194,6 @@ def login(email=''):
                         message = "Check password length, 6 - 20"
 
                     else:
-                        hashed_password = Gen().get_bcrypt_hashed_passwd(password)
 
                         connection = ssqlite(DATABASE_NAME)
                         sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
@@ -203,7 +202,9 @@ def login(email=''):
                             sql_query, email).fetchone()
 
                         if user_password != None:
-                            if user_password[0] != hashed_password:
+                            hashed_password = user_password[0]
+
+                            if not Val().is_valid_hash(password, hashed_password):
                                 message = "Invalid credentials..."
 
                             else:
@@ -260,7 +261,7 @@ def all_articles():
     return render_template('all_articles.html', articles=articles)
 
 
-@app.route('/article/read/<string:article_id>/')
+@app.route('/article/read/<string:article_id>')
 def read_article(article_id):
     article = []
     comments = []
@@ -270,19 +271,19 @@ def read_article(article_id):
     db_conn = ssqlite(DATABASE_NAME)
 
     sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
-    article_result = db_conn.run_query(sql_query, post_id)
+    article = db_conn.run_query(sql_query, post_id).fetchone()
 
-    if article_result:
-        article = article_result.fetchone()
+    if article:
 
         sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
-        comments_result = db_conn.run_query(sql_query, post_id)
+        comments_result = db_conn.run_query(sql_query, post_id).fetchall()
 
         if comments_result:
-            comments = comments_result.fetchall()
+            comments = comments_result
 
     else:
-        redirect(url_for('articles'))
+        print("else ::: ARTICLE-ID", article_id)
+        return redirect(url_for('all_articles'))
 
     return render_template('/article.html', article=article, comments=comments)
 
@@ -292,9 +293,53 @@ def delete_article(article_id):
     return article_id
 
 
+# function to read the article content and title
+def read_title_and_post(article_id):
+    id = article_id
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=?"
+    result = db_conn.run_query(sql_query, id).fetchone()
+
+    if result:
+        return result
+    else:
+        return False
+
+
 @app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
 def update_article(article_id):
-    return render_template('update_article.html')
+
+    if read_title_and_post(article_id):
+        article = read_title_and_post(article_id)
+    else:
+        return redirect(url_for('all_articles'))
+
+    post_id = article_id
+
+    if request.form and request.method == 'POST':
+
+        if (
+                request.form.get('update_post_title') and
+                request.form.get('update_post_content') and
+                request.form.get('update_post_submit_button')):
+
+            post_content = request.form.get('update_post_content')
+            post_title = request.form.get('update_post_title')
+
+            db_conn = ssqlite(DATABASE_NAME)
+
+            sql_query = "UPDATE `articles` SET  `post_content`=?, `post_title`=? WHERE `post_id`=?"
+            update_result = db_conn.run_query(
+                sql_query, post_content, post_title, post_id)
+
+            if update_result.rowcount:
+                return redirect(url_for('read_article', article_id=post_id))
+            
+            # stamp the db
+            db_conn.stamp()
+
+    return render_template('update_article.html', article=article)
 
 
 @app.route('/article/write', methods=['GET', 'POST'])
@@ -328,8 +373,6 @@ def write_article():
                     post_title = request.form.get('post_title')
                     post_content = request.form.get('post_content')
 
-                    # if post_title == "" or post_content == "":
-                    #     message = ""
                     # need some validation and verification
 
                     connection = ssqlite(DATABASE_NAME)
