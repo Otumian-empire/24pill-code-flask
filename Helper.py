@@ -1,5 +1,6 @@
 from datetime import datetime
 from http.client import HTTPSConnection as httpConn
+from passlib.hash import bcrypt
 from random import randint
 from string import (ascii_letters, ascii_lowercase, ascii_uppercase, digits,
                     punctuation, whitespace)
@@ -45,8 +46,9 @@ class Generator:
         return counter
 
     def get_bcrypt_hashed_passwd(self, password):
+        """ hash the password using bcrypt from passlib.hash """
         # use bcrypt to hash the password
-        return password
+        return bcrypt.hash(password)
 
     def get_current_date_time(self):
         # get the current date and time
@@ -171,7 +173,7 @@ class Validator:
          """
         # Conditions for a valid password are:
         if not password:
-            return False, f"password is empty"
+            return False
 
         # no leading or trailing while spaces spaces
         password = password.strip()
@@ -182,7 +184,7 @@ class Validator:
         MAX_PASS_SIZE = 20
 
         if not Validator().validate_size(password, [MIN_PASS_SIZE, MAX_PASS_SIZE]):
-            return False, f"password size should between {MIN_PASS_SIZE} and {MAX_PASS_SIZE} inclusive"
+            return False
 
         # avoid {*%;<>\{}[]+=?&,:'"` } and blank space
         valid_chars = {'-', '_', '.', '!', '@', '#', '$', '^', '&', '(', ')'}
@@ -190,21 +192,24 @@ class Validator:
 
         for char in invalid_chars:
             if char in password:
-                return False, f"Password may have special character such as {valid_chars}"
+                return False
 
         # Should have at least one number.
         if Generator().get_schar_count(password, digits) < 1:
-            return False, "Must include at least 1 digit"
+            return False
 
         # Should have at least one uppercase and one lowercase character.
         if Generator().get_schar_count(password, ascii_uppercase) < 1:
-            return False, "Must include at least 1 uppercase character"
+            return False
 
         if Generator().get_schar_count(password, ascii_lowercase) < 1:
-            return False, "Must include at least 1 lowercase"
+            return False
 
         # Should have at least one special symbol. {!@#$^&()_.-}.
         if Generator().get_schar_count(password, valid_chars) < 1:
-            return False, f"Must include at least 1 special symbol such as {valid_chars}"
+            return False
 
-        return password
+        return True
+
+    def is_valid_hash(self, password, hashed_password):
+        return bcrypt.verify(password, hashed_password)
