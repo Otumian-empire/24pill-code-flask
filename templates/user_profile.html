@@ -1,36 +1,6 @@
 {% extends 'layout.html'%}
 {% block body %}
 
-<!-- <?php
-    include_once "views_preprocessor.php";
-
-    // user can't view this page if they are not logged in
-    if (!check_session()) {
-        redirect_to('signup.php?msg=you must have an account here');
-    }
-
-    // send user an email containing a token that will last for an hour
-    // the token will be used as a verification code to change sensitive data
-    // such as password and email
-
-    // pull user details from the database except, password (allow user to enter password)
-    $user_email = get_user_email();
-
-    $select_user_data_query = "SELECT `users`.`user_first_name`, `users`.`user_last_name`, `users`.`user_email`, `users`.`user_bio` FROM `users` WHERE `users`.`user_email`='$user_email' LIMIT 1";
-
-
-    $select_user_data_result = mysqli_query($db_connection, $select_user_data_query);
-
-    if (!$select_user_data_result) {
-        redirect_to("index.php?msg=couldn't read your data from our system, try refreshing your page and try again later");
-    }
-
-    $user_data = mysqli_fetch_array($select_user_data_result);
-
-?> -->
-
-
-
 <div class="index-body container">
 
 	<div class="text-center text-info text-warning card-subtitle">
@@ -40,6 +10,7 @@
 		<p>Because we do not keep any data of yours</p>
 	</div>
 
+	{% if user_data %}
 	<div class="card card-update mx-auto mt-0">
 
 		<div class="card-header">My Account</div>
@@ -56,7 +27,7 @@
 						<div class="col-md-4">
 							<!-- first name -->
 							<div class="form-label-group">
-								<p class="form-control border-0" name="update_first_name">User name</p>
+								<p class="form-control border-0" name="update_first_name">{{user_data[0]}}</p>
 								<label for="first name" class="text-capitalize">Current First name</label>
 							</div>
 
@@ -106,7 +77,7 @@
 						<div class="col-md-4">
 							<!-- last name -->
 							<div class="form-label-group">
-								<p class="form-control border-0" name="update_last_name">user_last_name</p>
+								<p class="form-control border-0" name="update_last_name">{{user_data[1]}}</p>
 								<label for="last name" class="text-capitalize">Current Last name</label>
 							</div>
 
@@ -157,7 +128,7 @@
 
 							<!-- bio -->
 							<div class="form-label-group">
-								<p class="form-control border-0"></p>
+								<p class="form-control border-0">{{user_data[2]}}</p>
 								<label for="bio name" class="text-capitalize">Current bio</label>
 							</div>
 
@@ -206,7 +177,7 @@
 						<div class="col-md-4">
 							<!-- email -->
 							<div class="form-label-group">
-								<p class="form-control border-0"></p>
+								<p class="form-control border-0">{{user_data[3]}}</p>
 								<label for="email name" class="text-capitalize">Current email</label>
 							</div>
 
@@ -315,6 +286,7 @@
 
 	</div>
 	<!-- card ends here -->
+	{% endif %}
 
 </div>
 

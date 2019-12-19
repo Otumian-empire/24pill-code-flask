@@ -1,5 +1,5 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
-                   url_for)
+                   url_for, Markup)
 
 from Helper import Generator as Gen
 from Helper import Validator as Val
@@ -45,9 +45,37 @@ def email_token():
     return render_template('email_token_field.html')
 
 
+def get_user_details(email):
+    """ read user details, given the email, returns False is the email=='' or the query is unsuccessful """
+    if not email:
+        return False
+
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=?"
+
+    user_data = db_conn.run_query(sql_query, email).fetchone()
+
+    if user_data:
+        db_conn.stamp()
+        return user_data
+    else:
+        return False
+
+
 @app.route('/user_profile', methods=['GET', 'POST'])
 def user_profile():
-    return render_template('user_profile.html')
+    if not 'token' in session:
+        return redirect(url_for('login'))
+
+    user_email = session.get('email')
+
+    if get_user_details(user_email):
+        user_data = get_user_details(user_email)
+    else:
+        return redirect(url_for('login'))
+
+    return render_template('user_profile.html', user_data=user_data)
 
 
 @app.route('/password_token', methods=['GET', 'POST'])
@@ -144,6 +172,9 @@ def signup(email=''):
                             if not result:
                                 message = "Error"
 
+                                # stamp the database - commit the changes and close connection
+                                connection.stamp()
+
                             else:
 
                                 # create a session
@@ -154,11 +185,11 @@ def signup(email=''):
                                 message = "signup successfull"
                                 cat_filter = "success"
 
+                                # stamp the database - commit the changes and close connection
+                                connection.stamp()
+
                                 # redirect to index page
                                 return redirect(url_for('index'))
-
-                            # stamp the database - commit the changes and close connection
-                            connection.stamp()
 
                 else:
                     message = "Invalide email format"
@@ -368,10 +399,14 @@ def update_article(article_id):
                     sql_query, post_content, post_title, post_id)
 
                 if update_result.rowcount:
+                    # stamp the db
+                    db_conn.stamp()
                     return redirect(url_for('read_article', article_id=post_id))
+                else:
+                    flash('update unsuccessful', 'danger')
 
-                # stamp the db
-                db_conn.stamp()
+                    # stamp the db
+                    db_conn.stamp()
     else:
         return redirect(url_for('all_articles'))
 
