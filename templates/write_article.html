@@ -21,7 +21,7 @@
 
 				<textarea name="post_content" id="post_content" class="p-1 md-textarea form-control rounded-0" rows="3"
 					placeholder="article body.."
-					value="">{% if request.form.get('post_content') %}{{ request.form.get('post_content') }}{% endif %}</textarea>
+					value="">{% if request.form.get('post_content') %}{{ request.form.get('post_content')|safe }}{% endif %}</textarea>
 
 				<br>
 				<button name="post_submit_button" type="submit" class="btn btn-success btn-block"

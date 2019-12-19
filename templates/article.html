@@ -27,7 +27,7 @@
 			<hr>
 
 			<!-- content -->
-			<div>{{article[2]}}</div>
+			<div>{{article[2]|safe}}</div>
 		</div>
 
 		<br><br>
@@ -45,7 +45,7 @@
 		<div class="text-area">
 			<div class="card-header">Add Comment</div>
 
-			<form action="/comment/write/{{article[0]}}" method="post">
+			<form action="/comment/write/{{article[0]|safe}}" method="post">
 				<textarea class="comment-box p-1 md-textarea form-control rounded-0"
 					placeholder="Place your comments here" type="textarea" id="comment-box"
 					name="comment-box"></textarea>
