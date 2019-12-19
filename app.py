@@ -78,6 +78,8 @@ def delete_comment(comment_id):
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(comment_id):
+    if not 'token' in session:
+        return redirect(url_for('all_articles'))
     return comment_id
 
 
@@ -85,6 +87,9 @@ def update_comment(comment_id):
 @app.route('/account/signup/', methods=['GET', 'POST'])
 @app.route('/account/signup/<string:email>', methods=['GET', 'POST'])
 def signup(email=''):
+    if 'token' in session:
+        return redirect(url_for('all_articles'))
+
     message = ''
     cat_filter = "danger"
 
@@ -166,6 +171,9 @@ def signup(email=''):
 @app.route('/account/login/', methods=['GET', 'POST'])
 @app.route('/account/login/<string:email>', methods=['GET', 'POST'])
 def login(email=''):
+    if 'token' in session:
+        return redirect(url_for('all_articles'))
+
     message = ''
     cat_filter = 'danger'
 
@@ -235,9 +243,12 @@ def login(email=''):
 
 @app.route("/account/logout")
 def logout():
-    session.clear()
-    flash("Logout successfull", "success")
-    return redirect(url_for("login"))
+    if 'token' in session:
+        session.clear()
+        flash("Logout successfull", "success")
+        return redirect(url_for("login"))
+    else:
+        return redirect(url_for('all_articles'))
 
 
 # articles
@@ -282,7 +293,6 @@ def read_article(article_id):
             comments = comments_result
 
     else:
-        print("else ::: ARTICLE-ID", article_id)
         return redirect(url_for('all_articles'))
 
     return render_template('/article.html', article=article, comments=comments)
@@ -290,7 +300,31 @@ def read_article(article_id):
 
 @app.route("/article/delete/<string:article_id>")
 def delete_article(article_id):
-    return article_id
+    db_conn = ssqlite(DATABASE_NAME)
+
+    if 'token' in session:
+        user_email = session.get('email')
+        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
+
+        email_result = db_conn.run_query(sql_query, article_id).fetchone()
+
+        if email_result:
+            if email_result[0] == user_email:
+                delete_result = db_conn.run_query(
+                    "DELETE FROM `articles` WHERE `post_id`=? AND `user_email`=?", article_id, user_email)
+
+                if delete_result.rowcount:
+                    flash("Article deleted successfully", 'success')
+                    db_conn.stamp()
+                else:
+                    flash("Article deletion unsuccessful", 'danger')
+
+                return redirect(url_for('all_articles'))
+
+        return redirect(url_for('read_article', article_id=article_id))
+
+    else:
+        return redirect(url_for('all_articles'))
 
 
 # function to read the article content and title
@@ -309,35 +343,37 @@ def read_title_and_post(article_id):
 
 @app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
 def update_article(article_id):
+    if 'token' in session:
+        if read_title_and_post(article_id):
+            article = read_title_and_post(article_id)
+        else:
+            return redirect(url_for('all_articles'))
 
-    if read_title_and_post(article_id):
-        article = read_title_and_post(article_id)
+        post_id = article_id
+
+        if request.form and request.method == 'POST':
+
+            if (
+                    request.form.get('update_post_title') and
+                    request.form.get('update_post_content') and
+                    request.form.get('update_post_submit_button')):
+
+                post_content = request.form.get('update_post_content')
+                post_title = request.form.get('update_post_title')
+
+                db_conn = ssqlite(DATABASE_NAME)
+
+                sql_query = "UPDATE `articles` SET  `post_content`=?, `post_title`=? WHERE `post_id`=?"
+                update_result = db_conn.run_query(
+                    sql_query, post_content, post_title, post_id)
+
+                if update_result.rowcount:
+                    return redirect(url_for('read_article', article_id=post_id))
+
+                # stamp the db
+                db_conn.stamp()
     else:
         return redirect(url_for('all_articles'))
-
-    post_id = article_id
-
-    if request.form and request.method == 'POST':
-
-        if (
-                request.form.get('update_post_title') and
-                request.form.get('update_post_content') and
-                request.form.get('update_post_submit_button')):
-
-            post_content = request.form.get('update_post_content')
-            post_title = request.form.get('update_post_title')
-
-            db_conn = ssqlite(DATABASE_NAME)
-
-            sql_query = "UPDATE `articles` SET  `post_content`=?, `post_title`=? WHERE `post_id`=?"
-            update_result = db_conn.run_query(
-                sql_query, post_content, post_title, post_id)
-
-            if update_result.rowcount:
-                return redirect(url_for('read_article', article_id=post_id))
-            
-            # stamp the db
-            db_conn.stamp()
 
     return render_template('update_article.html', article=article)
 
