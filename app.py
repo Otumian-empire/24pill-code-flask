@@ -1,7 +1,7 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 
-from Helper import Geretator as Gen
+from Helper import Generator as Gen
 from Helper import Validator as Val
 from ssqlite import ssqlite
 
@@ -61,24 +61,24 @@ def forget_password():
 
 
 @app.route('/delete_user/<string:email>', methods=['GET', 'POST'])
-def delete_user():
-    pass
+def delete_user(email=''):
+    return email
 
 
 # comments
 @app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
-def write_comment():
-    pass
+def write_comment(article_id):
+    return article_id
 
 
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
-def delete_comment(id):
-    pass
+def delete_comment(comment_id):
+    return comment_id
 
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
-def update_comment(id):
-    pass
+def update_comment(comment_id):
+    return comment_id
 
 
 # signup, login and logout
@@ -240,7 +240,7 @@ def logout():
 
 
 # articles
-@app.route('/article')
+@app.route('/article/')  # /article/unknow_id - return articles
 @app.route('/articles')
 def all_articles():
 
@@ -260,12 +260,12 @@ def all_articles():
     return render_template('all_articles.html', articles=articles)
 
 
-@app.route('/article/read/<string:id>/')
-def read_article(id):
+@app.route('/article/read/<string:article_id>/')
+def read_article(article_id):
     article = []
     comments = []
 
-    post_id = id
+    post_id = article_id
 
     db_conn = ssqlite(DATABASE_NAME)
 
@@ -287,13 +287,13 @@ def read_article(id):
     return render_template('/article.html', article=article, comments=comments)
 
 
-@app.route("/article/delete/<string:id>")
-def delete_article(id):
-    pass
+@app.route("/article/delete/<string:article_id>")
+def delete_article(article_id):
+    return article_id
 
 
-@app.route('/article/update/<string:id>', methods=['GET', 'POST'])
-def update_article(id):
+@app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
+def update_article(article_id):
     return render_template('update_article.html')
 
 
@@ -357,6 +357,52 @@ def write_article():
     flash(message, cat_filter)
 
     return render_template('write_article.html')
+
+
+# test request
+with app.test_request_context():
+    # index
+    print(url_for('index'))
+    # about
+    print(url_for('about'))
+    # contact
+    print(url_for('contact'))
+    # email token
+    print(url_for('email_token'))
+    # password token
+    print(url_for('password_token'))
+    # user profile
+    print(url_for('user_profile'))
+    # forget password
+    print(url_for('forget_password'))
+    # delete user
+    print(url_for('delete_user', email='hello@hmail.com'))
+    # write comment
+    print(url_for('write_comment', article_id='1'))
+    # delete comment
+    print(url_for('delete_comment', comment_id='1'))
+    # update comment
+    print(url_for('update_comment', comment_id='1'))
+    # signup
+    print(url_for('signup'))
+    print(url_for('signup', email="A@amail.com"))
+    # login
+    print(url_for('login'))
+    print(url_for('login', email='A@amail.com'))
+    # logout
+    print(url_for('logout'))
+    # article
+    print(url_for('all_articles'))
+    # read article
+    print(url_for('read_article', article_id='1'))
+    # update article
+    print(url_for('update_article', article_id='1'))
+    # write article
+    print(url_for('write_article'))
+    # delete article
+    print(url_for('delete_article', article_id='1'))
+    # print(url_for())
+    # print(url_for())
 
 
 if __name__ == "__main__":
