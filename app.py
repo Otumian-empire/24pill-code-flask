@@ -1,5 +1,5 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
-                   url_for, Markup)
+                   url_for)
 
 from Helper import Generator as Gen
 from Helper import Validator as Val
@@ -55,9 +55,9 @@ def get_user_details(email):
     sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=?"
 
     user_data = db_conn.run_query(sql_query, email).fetchone()
+    db_conn.stamp()
 
     if user_data:
-        db_conn.stamp()
         return user_data
     else:
         return False
@@ -125,7 +125,8 @@ def write_comment(article_id):
                 db_conn = ssqlite(DATABASE_NAME)
 
                 sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(?, ?, ?, ?)"
-                result = db_conn.run_query(sql_query, article_id, comment_text, comment_date, user_email)
+                result = db_conn.run_query(
+                    sql_query, article_id, comment_text, comment_date, user_email)
 
                 if result.rowcount > 0:
                     message = "Comment added successfully"
@@ -159,17 +160,17 @@ def delete_comment(comment_id):
 
         if user_email == email:
             sql_query = "DELETE FROM `comments` WHERE `comment_id`=?"
-            
+
             result = db_conn.run_query(sql_query, comment_id)
 
             if result.rowcount == 1:
                 message = "comment deleted successfully"
                 cat_filter = "success"
-                
+
             else:
                 message = "could not delete comment"
                 cat_filter = "danger"
-            
+
             db_conn.stamp()
             flash(message, cat_filter)
 
@@ -177,15 +178,92 @@ def delete_comment(comment_id):
     else:
         return redirect(url_for('logout'))
 
+# read comment
 
-    
+
+def read_comment(comment_id):
+    """ return a tuple of the post_id, comment_text and user_email """
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=?"
+    result = db_conn.run_query(sql_query, comment_id).fetchone()
+    db_conn.stamp()
+
+    if result:
+        return result
+    else:
+        return False
 
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(comment_id):
     if not 'token' in session:
+        return redirect(url_for('logout'))
+
+    user_email = session.get('email')
+
+    if not read_comment(comment_id):
         return redirect(url_for('all_articles'))
-    return comment_id
+
+    # read the comment data
+    data = read_comment(comment_id)
+
+    # comment_id = data[0]
+    # comment_text = data[1]
+    post_id = data[2]
+    email = data[3]
+
+    cat_filter = 'danger'
+    message = ''
+
+    if not email == user_email:
+        message = "edit an article you wrote"
+        return redirect(url_for('all_articles'))
+
+    if not request.form:
+        message = "There is no request form"
+
+    else:
+        if request.method != 'POST':
+            message = 'Request method is not POST'
+
+        else:
+            if (
+                    not request.form.get('update_comment_content') or
+                    not request.form.get('update_comment_submit_button')):
+
+                message = 'Select a comment you wrote'
+
+                return redirect(url_for('read_article', article_id=post_id))
+
+            else:
+                comment_text = request.form.get('update_comment_content')
+
+                connection = ssqlite(DATABASE_NAME)
+                sql_query = "UPDATE `comments` SET `comment_text`=? WHERE `comment_id`=? AND `user_email`=?"
+
+                result = connection.run_query(
+                    sql_query, comment_text, comment_id, user_email)
+
+                if not result.rowcount == 1:
+                    message = "could not update the comment"
+                
+                else:
+                    # a row is affected
+                    message = "comment updated successfully"
+                    cat_filter = "success"
+
+                # stamp the database - commit the changes and close connection
+                connection.stamp()
+
+                flash(message, cat_filter)
+
+                # redirect to to read_article with the article id
+                return redirect(url_for('read_article', article_id=post_id))
+
+    flash(message, cat_filter)
+
+    return render_template('update_comment.html', comment=data)
 
 
 # signup, login and logout
@@ -259,7 +337,7 @@ def signup(email=''):
                                 session["email"] = email
 
                                 # success
-                                message = "signup successfull"
+                                message = "signup successful"
                                 cat_filter = "success"
 
                                 # stamp the database - commit the changes and close connection
@@ -452,10 +530,10 @@ def read_title_and_post(article_id):
 @app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
 def update_article(article_id):
     if 'token' in session:
-        if read_title_and_post(article_id):
-            article = read_title_and_post(article_id)
-        else:
+        if not read_title_and_post(article_id):
             return redirect(url_for('all_articles'))
+        
+        article = read_title_and_post(article_id)    
 
         post_id = article_id
 
@@ -475,18 +553,22 @@ def update_article(article_id):
                 update_result = db_conn.run_query(
                     sql_query, post_content, post_title, post_id)
 
-                if update_result.rowcount:
+                if update_result.rowcount == 1:
                     # stamp the db
                     db_conn.stamp()
-                    return redirect(url_for('read_article', article_id=post_id))
-                else:
-                    flash('update unsuccessful', 'danger')
 
+                    flash("article updated successfully", 'success')
+                    return redirect(url_for('read_article', article_id=post_id))
+
+                else:
                     # stamp the db
                     db_conn.stamp()
+                    flash('update unsuccessful', 'danger')
+                    
     else:
         return redirect(url_for('all_articles'))
 
+    # flash(message, cat_filter)
     return render_template('update_article.html', article=article)
 
 
@@ -540,6 +622,8 @@ def write_article():
                         # success
                         message = "article added successfully"
                         cat_filter = "success"
+
+                        flash(message, cat_filter)
 
                         # redirect to index page
                         return redirect(url_for('index'))
