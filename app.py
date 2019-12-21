@@ -143,7 +143,42 @@ def write_comment(article_id):
 
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
 def delete_comment(comment_id):
-    return comment_id
+    if not 'token' in session:
+        return redirect(url_for('logout'))
+
+    user_email = session.get('email')
+
+    db_conn = ssqlite(DATABASE_NAME)
+    sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=?"
+
+    result = db_conn.run_query(sql_query, comment_id).fetchone()
+
+    if result:
+        email = result[0]
+        post_id = result[1]
+
+        if user_email == email:
+            sql_query = "DELETE FROM `comments` WHERE `comment_id`=?"
+            
+            result = db_conn.run_query(sql_query, comment_id)
+
+            if result.rowcount == 1:
+                message = "comment deleted successfully"
+                cat_filter = "success"
+                
+            else:
+                message = "could not delete comment"
+                cat_filter = "danger"
+            
+            db_conn.stamp()
+            flash(message, cat_filter)
+
+            return redirect(url_for('read_article', article_id=post_id))
+    else:
+        return redirect(url_for('logout'))
+
+
+    
 
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
