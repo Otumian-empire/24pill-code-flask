@@ -45,14 +45,14 @@
 		<div class="text-area">
 			<div class="card-header">Add Comment</div>
 
-			<form action="/comment/write/{{article[0]|safe}}" method="post">
+			<form action="/comment/write/{{article[0]}}" method="post">
 				<textarea class="comment-box p-1 md-textarea form-control rounded-0"
 					placeholder="Place your comments here" type="textarea" id="comment-box"
-					name="comment-box"></textarea>
+					name="comment_box"></textarea>
 				<br>
 
 				<div class="input-group">
-					<button class="btn btn-success btn-block" id="add-comment-btn" name="add-comment-btn">ADD</button>
+					<button class="btn btn-success btn-block" id="add-comment-btn" name="add_comment_btn" type="submit" value="add_comment">ADD</button>
 				</div>
 
 			</form>
@@ -91,10 +91,8 @@
 						<span class='mr-2'>{{comment[4]}}</span>
 
 						<!-- comment_text -->
-						<p>{{comment[2]}}</p>
-
-						<!-- comment_id, just goofying -->
-						<span class=''>{{comment[0]}}-{{Gen().generate_token()}}</span>
+						<p>{{comment[2]|safe}}</p>
+						<span></span>
 
 					</div>
 				</li>
@@ -115,10 +113,10 @@
 
 </div>
 
-<script src="url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
 <script>
 	tinymce.init({
-		selector: '.comment-box'
+		selector: '#comment-box'
 	});
 </script>
 {% endblock %}

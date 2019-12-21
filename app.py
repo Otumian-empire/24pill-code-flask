@@ -96,7 +96,49 @@ def delete_user(email=''):
 # comments
 @app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
 def write_comment(article_id):
-    return article_id
+
+    if not 'token' in session:
+        return redirect(url_for('logout'))
+
+    message = ''
+    cat_filter = "danger"
+
+    if not request.form:
+        message = "There is no request form"
+
+    else:
+        if request.method != 'POST':
+            message = 'Request method is not POST'
+
+        else:
+            if (
+                    not request.form.get('comment_box') or
+                    not request.form.get('add_comment_btn')):
+
+                message = 'Comment is empty'
+
+            else:
+                comment_text = request.form.get('comment_box')
+                user_email = session.get('email')
+                comment_date = Gen().get_current_date_time()
+
+                db_conn = ssqlite(DATABASE_NAME)
+
+                sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(?, ?, ?, ?)"
+                result = db_conn.run_query(sql_query, article_id, comment_text, comment_date, user_email)
+
+                if result.rowcount > 0:
+                    message = "Comment added successfully"
+                    cat_filter = 'success'
+                    db_conn.stamp()
+
+                else:
+                    message = "could not add comment"
+                    db_conn.stamp()
+
+    flash(message, cat_filter)
+
+    return redirect(url_for('read_article', article_id=article_id))
 
 
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
@@ -454,15 +496,18 @@ def write_article():
                     result = connection.run_query(
                         sql_query, post_title, post_content, user_email, post_date)
 
-                    # stamp the database - commit the changes and close connection
-                    connection.stamp()
+                    if not result.rowcount > 0:
+                        message = "could not add article, please try again"
+                    else:
+                        # stamp the database - commit the changes and close connection
+                        connection.stamp()
 
-                    # success
-                    message = "article added successfully"
-                    cat_filter = "success"
+                        # success
+                        message = "article added successfully"
+                        cat_filter = "success"
 
-                    # redirect to index page
-                    return redirect(url_for('index'))
+                        # redirect to index page
+                        return redirect(url_for('index'))
 
     else:
         message = "Please login first"

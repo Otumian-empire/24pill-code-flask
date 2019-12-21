@@ -34,4 +34,5 @@ class ssqlite:
         """ commit and close the connection to the database.
         Do not call this method in the middle of your code when you would run more queries with the same cursor, though you can still create a new object of ssqlite """
         self.connection.commit()
+        self.cursor.close()
         self.connection.close()
