@@ -486,12 +486,12 @@ def read_article(article_id):
 
 @app.route("/article/delete/<string:article_id>")
 def delete_article(article_id):
-    db_conn = ssqlite(DATABASE_NAME)
 
     if 'token' in session:
         user_email = session.get('email')
         sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
 
+        db_conn = ssqlite(DATABASE_NAME)
         email_result = db_conn.run_query(sql_query, article_id).fetchone()
 
         if email_result:
@@ -500,11 +500,15 @@ def delete_article(article_id):
                     "DELETE FROM `articles` WHERE `post_id`=? AND `user_email`=?", article_id, user_email)
 
                 if delete_result.rowcount:
+                    # delete all comments related to this article.
+                    # it is a success either a row is affected or not
+                    db_conn.run_query("DELETE FROM `comments` WHERE `post_id`=?", article_id)
                     flash("Article deleted successfully", 'success')
-                    db_conn.stamp()
+                    
                 else:
                     flash("Article deletion unsuccessful", 'danger')
 
+                db_conn.stamp()
                 return redirect(url_for('all_articles'))
 
         return redirect(url_for('read_article', article_id=article_id))
