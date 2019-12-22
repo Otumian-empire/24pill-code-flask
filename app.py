@@ -13,6 +13,47 @@ app.secret_key = "12345"  # use a better secret_key
 DATABASE_NAME = "pill_code_db.db"
 
 
+# check if there is session
+def is_set_session():
+    """ check if there is session. We do this to see if user has actually signed in """
+    if not 'token' in session:
+        return redirect(url_for('logout'))
+    else:
+        return True
+
+# get user details by passing email as the argument
+def get_user_details(email):
+    """ read user details, given the email, returns False is the email=='' or the query is unsuccessful """
+    if not email:
+        return False
+
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=?"
+
+    user_data = db_conn.run_query(sql_query, email).fetchone()
+    db_conn.stamp()
+
+    if user_data:
+        return user_data
+    else:
+        return False
+
+
+# function to read the article content and title
+def read_title_and_post(article_id):
+    id = article_id
+    db_conn = ssqlite(DATABASE_NAME)
+
+    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=?"
+    result = db_conn.run_query(sql_query, id).fetchone()
+
+    if result:
+        return result
+    else:
+        return False
+
+
 # index/home page
 @app.route('/')
 @app.route('/index')
@@ -40,47 +81,46 @@ def contact():
 
 
 # account settings
-@app.route('/email_token', methods=['GET', 'POST'])
-def email_token():
-    return render_template('email_token_field.html')
-
-
-def get_user_details(email):
-    """ read user details, given the email, returns False is the email=='' or the query is unsuccessful """
-    if not email:
-        return False
-
-    db_conn = ssqlite(DATABASE_NAME)
-
-    sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=?"
-
-    user_data = db_conn.run_query(sql_query, email).fetchone()
-    db_conn.stamp()
-
-    if user_data:
-        return user_data
-    else:
-        return False
-
-
-@app.route('/user_profile', methods=['GET', 'POST'])
+@app.route('/setting/', methods=['GET', 'POST'])
+@app.route('/setting/profile', methods=['GET', 'POST'])
 def user_profile():
-    if not 'token' in session:
-        return redirect(url_for('login'))
+    if is_set_session():
 
-    user_email = session.get('email')
+        user_email = session.get('email')
 
-    if get_user_details(user_email):
+        if not get_user_details(user_email):
+            return redirect(url_for('login'))
+
         user_data = get_user_details(user_email)
-    else:
-        return redirect(url_for('login'))
 
-    return render_template('user_profile.html', user_data=user_data)
+        return render_template('user_profile.html', user_data=user_data)
 
 
-@app.route('/password_token', methods=['GET', 'POST'])
-def password_token():
-    return render_template('password_token_field.html')
+@app.route('/setting/firstname/<string:email>', methods=['GET', 'POST'])
+def update_first_name(email=''):
+    return email
+
+
+@app.route('/setting/lastname/<string:email>', methods=['GET', 'POST'])
+def update_last_name(email=''):
+    return email
+
+
+@app.route('/setting/bio/<string:email>', methods=['GET', 'POST'])
+def update_bio(email=''):
+    return email
+
+
+@app.route('/setting/email/<string:email>', methods=['GET', 'POST'])
+def email_token(email=''):
+    # return render_template('email_token_field.html')
+    return email
+
+
+@app.route('/setting/password/<string:email>', methods=['GET', 'POST'])
+def password_token(email=''):
+    # return render_template('password_token_field.html')
+    return email
 
 
 @app.route('/forget_password', methods=['GET', 'POST'])
@@ -88,99 +128,91 @@ def forget_password():
     return render_template('forget_password.html')
 
 
-@app.route('/delete_user/<string:email>', methods=['GET', 'POST'])
-def delete_user(email=''):
-    return email
-
-
 # comments
 @app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
 def write_comment(article_id):
 
-    if not 'token' in session:
-        return redirect(url_for('logout'))
+    if is_set_session():
 
-    message = ''
-    cat_filter = "danger"
+        message = ''
+        cat_filter = "danger"
 
-    if not request.form:
-        message = "There is no request form"
-
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+        if not request.form:
+            message = "There is no request form"
 
         else:
-            if (
-                    not request.form.get('comment_box') or
-                    not request.form.get('add_comment_btn')):
-
-                message = 'Comment is empty'
+            if request.method != 'POST':
+                message = 'Request method is not POST'
 
             else:
-                comment_text = request.form.get('comment_box')
-                user_email = session.get('email')
-                comment_date = Gen().get_current_date_time()
+                if (
+                        not request.form.get('comment_box') or
+                        not request.form.get('add_comment_btn')):
 
-                db_conn = ssqlite(DATABASE_NAME)
-
-                sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(?, ?, ?, ?)"
-                result = db_conn.run_query(
-                    sql_query, article_id, comment_text, comment_date, user_email)
-
-                if result.rowcount > 0:
-                    message = "Comment added successfully"
-                    cat_filter = 'success'
-                    db_conn.stamp()
+                    message = 'Comment is empty'
 
                 else:
-                    message = "could not add comment"
-                    db_conn.stamp()
+                    comment_text = request.form.get('comment_box')
+                    user_email = session.get('email')
+                    comment_date = Gen().get_current_date_time()
 
-    flash(message, cat_filter)
+                    db_conn = ssqlite(DATABASE_NAME)
 
-    return redirect(url_for('read_article', article_id=article_id))
+                    sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(?, ?, ?, ?)"
+                    result = db_conn.run_query(
+                        sql_query, article_id, comment_text, comment_date, user_email)
+
+                    if result.rowcount > 0:
+                        message = "Comment added successfully"
+                        cat_filter = 'success'
+                        db_conn.stamp()
+
+                    else:
+                        message = "could not add comment"
+                        db_conn.stamp()
+
+        flash(message, cat_filter)
+
+        return redirect(url_for('read_article', article_id=article_id))
 
 
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
 def delete_comment(comment_id):
-    if not 'token' in session:
-        return redirect(url_for('logout'))
+    if is_set_session():
+        user_email = session.get('email')
 
-    user_email = session.get('email')
+        db_conn = ssqlite(DATABASE_NAME)
+        sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=?"
 
-    db_conn = ssqlite(DATABASE_NAME)
-    sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=?"
+        result = db_conn.run_query(sql_query, comment_id).fetchone()
 
-    result = db_conn.run_query(sql_query, comment_id).fetchone()
+        if result:
+            email = result[0]
+            post_id = result[1]
 
-    if result:
-        email = result[0]
-        post_id = result[1]
+            if user_email == email:
+                sql_query = "DELETE FROM `comments` WHERE `comment_id`=?"
 
-        if user_email == email:
-            sql_query = "DELETE FROM `comments` WHERE `comment_id`=?"
+                result = db_conn.run_query(sql_query, comment_id)
 
-            result = db_conn.run_query(sql_query, comment_id)
+                if result.rowcount == 1:
+                    message = "comment deleted successfully"
+                    cat_filter = "success"
 
-            if result.rowcount == 1:
-                message = "comment deleted successfully"
-                cat_filter = "success"
+                else:
+                    message = "could not delete comment"
+                    cat_filter = "danger"
 
-            else:
-                message = "could not delete comment"
-                cat_filter = "danger"
-
-            db_conn.stamp()
-            flash(message, cat_filter)
+                db_conn.stamp()
+                flash(message, cat_filter)
 
             return redirect(url_for('read_article', article_id=post_id))
-    else:
-        return redirect(url_for('logout'))
+            
+        else:
+            return redirect(url_for('logout'))
+
 
 # read comment
-
-
 def read_comment(comment_id):
     """ return a tuple of the post_id, comment_text and user_email """
     db_conn = ssqlite(DATABASE_NAME)
@@ -197,234 +229,231 @@ def read_comment(comment_id):
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(comment_id):
-    if not 'token' in session:
-        return redirect(url_for('logout'))
+    if is_set_session():
 
-    user_email = session.get('email')
+        user_email = session.get('email')
 
-    if not read_comment(comment_id):
-        return redirect(url_for('all_articles'))
+        if not read_comment(comment_id):
+            return redirect(url_for('all_articles'))
 
-    # read the comment data
-    data = read_comment(comment_id)
+        # read the comment data
+        data = read_comment(comment_id)
 
-    # comment_id = data[0]
-    # comment_text = data[1]
-    post_id = data[2]
-    email = data[3]
+        # comment_id = data[0]
+        # comment_text = data[1]
+        post_id = data[2]
+        email = data[3]
 
-    cat_filter = 'danger'
-    message = ''
+        cat_filter = 'danger'
+        message = ''
 
-    if not email == user_email:
-        message = "edit an article you wrote"
-        return redirect(url_for('all_articles'))
+        if not email == user_email:
+            message = "edit an article you wrote"
+            return redirect(url_for('all_articles'))
 
-    if not request.form:
-        message = "There is no request form"
-
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+        if not request.form:
+            message = "There is no request form"
 
         else:
-            if (
-                    not request.form.get('update_comment_content') or
-                    not request.form.get('update_comment_submit_button')):
-
-                message = 'Select a comment you wrote'
-
-                return redirect(url_for('read_article', article_id=post_id))
+            if request.method != 'POST':
+                message = 'Request method is not POST'
 
             else:
-                comment_text = request.form.get('update_comment_content')
+                if (
+                        not request.form.get('update_comment_content') or
+                        not request.form.get('update_comment_submit_button')):
 
-                connection = ssqlite(DATABASE_NAME)
-                sql_query = "UPDATE `comments` SET `comment_text`=? WHERE `comment_id`=? AND `user_email`=?"
+                    message = 'Select a comment you wrote'
 
-                result = connection.run_query(
-                    sql_query, comment_text, comment_id, user_email)
+                    return redirect(url_for('read_article', article_id=post_id))
 
-                if not result.rowcount == 1:
-                    message = "could not update the comment"
-                
                 else:
-                    # a row is affected
-                    message = "comment updated successfully"
-                    cat_filter = "success"
+                    comment_text = request.form.get('update_comment_content')
 
-                # stamp the database - commit the changes and close connection
-                connection.stamp()
+                    connection = ssqlite(DATABASE_NAME)
+                    sql_query = "UPDATE `comments` SET `comment_text`=? WHERE `comment_id`=? AND `user_email`=?"
 
-                flash(message, cat_filter)
+                    result = connection.run_query(
+                        sql_query, comment_text, comment_id, user_email)
 
-                # redirect to to read_article with the article id
-                return redirect(url_for('read_article', article_id=post_id))
+                    if not result.rowcount == 1:
+                        message = "could not update the comment"
+                    
+                    else:
+                        # a row is affected
+                        message = "comment updated successfully"
+                        cat_filter = "success"
 
-    flash(message, cat_filter)
+                    # stamp the database - commit the changes and close connection
+                    connection.stamp()
 
-    return render_template('update_comment.html', comment=data)
+                    flash(message, cat_filter)
+
+                    # redirect to to read_article with the article id
+                    return redirect(url_for('read_article', article_id=post_id))
+
+        flash(message, cat_filter)
+
+        return render_template('update_comment.html', comment=data)
 
 
-# signup, login and logout
+# signup, login, Logout and delete account
 @app.route('/account/signup/', methods=['GET', 'POST'])
 @app.route('/account/signup/<string:email>', methods=['GET', 'POST'])
 def signup(email=''):
-    if 'token' in session:
-        return redirect(url_for('all_articles'))
+    if is_set_session():
 
-    message = ''
-    cat_filter = "danger"
+        message = ''
+        cat_filter = "danger"
 
-    if not request.form:
-        message = "There is no request form"
-
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+        if not request.form:
+            message = "There is no request form"
 
         else:
-            if (
-                    not request.form.get('sign_up_first_name') or
-                    not request.form.get('sign_up_last_name') or
-                    not request.form.get('sign_up_email') or
-                    not request.form.get('sign_up_password') or
-                    not request.form.get('sign_up_confirm_password') or
-                    not request.form.get('sign_up_user_bio') or
-                    not request.form.get('register_button')):
-
-                message = 'There are empty fields, please fill them out'
+            if request.method != 'POST':
+                message = 'Request method is not POST'
 
             else:
-                first_name = request.form.get('sign_up_first_name')
-                last_name = request.form.get('sign_up_last_name')
-                bio = request.form.get('sign_up_user_bio')
+                if (
+                        not request.form.get('sign_up_first_name') or
+                        not request.form.get('sign_up_last_name') or
+                        not request.form.get('sign_up_email') or
+                        not request.form.get('sign_up_password') or
+                        not request.form.get('sign_up_confirm_password') or
+                        not request.form.get('sign_up_user_bio') or
+                        not request.form.get('register_button')):
 
-                email = request.form.get('sign_up_email')
-
-                if Val().is_email_valid(email):
-                    sign_up_password = request.form.get('sign_up_password')
-                    confirm_password = request.form.get(
-                        'sign_up_confirm_password')
-
-                    if not Val().is_valid_password(sign_up_password) or not Val().is_valid_password(confirm_password):
-                        message = "Invalid password format"
-
-                    else:
-                        if not Val().validate_size(sign_up_password):
-                            message = "Check password length, 6 - 20"
-
-                        else:
-                            hashed_passwd = Gen().get_bcrypt_hashed_passwd(sign_up_password)
-                            registered_date = Gen().get_current_date_time()
-
-                            connection = ssqlite(DATABASE_NAME)
-                            sql_query = "INSERT INTO `users`(`user_first_name`, `user_last_name`, `user_email`, `user_password`, `user_bio`, `user_register_date`) VALUES(?, ?, ?, ?, ?, ?)"
-
-                            result = connection.run_query(
-                                sql_query, first_name, last_name, email, hashed_passwd, bio, registered_date)
-
-                            if not result:
-                                message = "Error"
-
-                                # stamp the database - commit the changes and close connection
-                                connection.stamp()
-
-                            else:
-
-                                # create a session
-                                session["token"] = Gen().generate_token()
-                                session["email"] = email
-
-                                # success
-                                message = "signup successful"
-                                cat_filter = "success"
-
-                                # stamp the database - commit the changes and close connection
-                                connection.stamp()
-
-                                # redirect to index page
-                                return redirect(url_for('index'))
+                    message = 'There are empty fields, please fill them out'
 
                 else:
-                    message = "Invalide email format"
+                    first_name = request.form.get('sign_up_first_name')
+                    last_name = request.form.get('sign_up_last_name')
+                    bio = request.form.get('sign_up_user_bio')
 
-    flash(message, cat_filter)
+                    email = request.form.get('sign_up_email')
 
-    return render_template('signup.html', email=email)
+                    if Val().is_email_valid(email):
+                        sign_up_password = request.form.get('sign_up_password')
+                        confirm_password = request.form.get(
+                            'sign_up_confirm_password')
+
+                        if not Val().is_valid_password(sign_up_password) or not Val().is_valid_password(confirm_password):
+                            message = "Invalid password format"
+
+                        else:
+                            if not Val().validate_size(sign_up_password):
+                                message = "Check password length, 6 - 20"
+
+                            else:
+                                hashed_passwd = Gen().get_bcrypt_hashed_passwd(sign_up_password)
+                                registered_date = Gen().get_current_date_time()
+
+                                connection = ssqlite(DATABASE_NAME)
+                                sql_query = "INSERT INTO `users`(`user_first_name`, `user_last_name`, `user_email`, `user_password`, `user_bio`, `user_register_date`) VALUES(?, ?, ?, ?, ?, ?)"
+
+                                result = connection.run_query(
+                                    sql_query, first_name, last_name, email, hashed_passwd, bio, registered_date)
+
+                                if not result:
+                                    message = "Error"
+
+                                    # stamp the database - commit the changes and close connection
+                                    connection.stamp()
+
+                                else:
+
+                                    # create a session
+                                    session["token"] = Gen().generate_token()
+                                    session["email"] = email
+
+                                    # success
+                                    message = "signup successful"
+                                    cat_filter = "success"
+
+                                    # stamp the database - commit the changes and close connection
+                                    connection.stamp()
+
+                                    # redirect to index page
+                                    return redirect(url_for('index'))
+
+                    else:
+                        message = "Invalide email format"
+
+        flash(message, cat_filter)
+
+        return render_template('signup.html', email=email)
 
 
 @app.route('/account/login/', methods=['GET', 'POST'])
 @app.route('/account/login/<string:email>', methods=['GET', 'POST'])
 def login(email=''):
-    if 'token' in session:
-        return redirect(url_for('all_articles'))
+    if is_set_session():
 
-    message = ''
-    cat_filter = 'danger'
+        message = ''
+        cat_filter = 'danger'
 
-    if request.form and request.method != 'POST':
-        message = 'Request method is not POST'
-
-    else:
-        if (
-                not request.form.get('login_email') or
-                not request.form.get('login_password') or
-                not request.form.get('login_button')):
-
-            message = 'There are empty fields, please fill them out'
+        if request.form and request.method != 'POST':
+            message = 'Request method is not POST'
 
         else:
-            email = request.form.get('login_email')
+            if (
+                    not request.form.get('login_email') or
+                    not request.form.get('login_password') or
+                    not request.form.get('login_button')):
 
-            if Val().is_email_valid(email):
-                password = request.form.get('login_password')
-
-                if not Val().is_valid_password(password):
-                    message = "Invalid password format"
-
-                else:
-                    if not Val().validate_size(password):
-                        message = "Check password length, 6 - 20"
-
-                    else:
-
-                        connection = ssqlite(DATABASE_NAME)
-                        sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
-
-                        user_password = connection.run_query(
-                            sql_query, email).fetchone()
-
-                        if user_password != None:
-                            hashed_password = user_password[0]
-
-                            if not Val().is_valid_hash(password, hashed_password):
-                                message = "Invalid credentials..."
-
-                            else:
-                                # create a session
-                                session["token"] = Gen().generate_token()
-                                session["email"] = email
-
-                                # success
-                                message = "login successfull"
-                                cat_filter = "success"
-
-                                # redirect to index page
-                                return redirect(url_for('index'))
-                        else:
-                            # redirect user to sign up page with the email
-                            # message = "Kindly login, strange credentials..."
-                            return redirect(url_for('signup', email=email))
-
-                        # stamp the database - commit the changes and close connection
-                        connection.stamp()
+                message = 'There are empty fields, please fill them out'
 
             else:
-                message = "Invalide email format"
+                email = request.form.get('login_email')
 
-    flash(message, cat_filter)
-    return render_template('login.html')
+                if Val().is_email_valid(email):
+                    password = request.form.get('login_password')
+
+                    if not Val().is_valid_password(password):
+                        message = "Invalid password format"
+
+                    else:
+                        if not Val().validate_size(password):
+                            message = "Check password length, 6 - 20"
+
+                        else:
+
+                            connection = ssqlite(DATABASE_NAME)
+                            sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
+
+                            user_password = connection.run_query(
+                                sql_query, email).fetchone()
+
+                            if user_password != None:
+                                hashed_password = user_password[0]
+
+                                if not Val().is_valid_hash(password, hashed_password):
+                                    message = "Invalid credentials..."
+
+                                else:
+                                    # create a session
+                                    session["token"] = Gen().generate_token()
+                                    session["email"] = email
+
+                                    # success
+                                    message = "login successfull"
+                                    cat_filter = "success"
+
+                                    # redirect to index page
+                                    return redirect(url_for('index'))
+                            else:
+                                # redirect user to sign up page with the email
+                                # message = "Kindly login, strange credentials..."
+                                return redirect(url_for('signup', email=email))
+
+                            # stamp the database - commit the changes and close connection
+                            connection.stamp()
+
+                else:
+                    message = "Invalide email format"
+
+        flash(message, cat_filter)
+        return render_template('login.html')
 
 
 @app.route("/account/logout")
@@ -432,9 +461,13 @@ def logout():
     if 'token' in session:
         session.clear()
         flash("Logout successfull", "success")
-        return redirect(url_for("login"))
-    else:
-        return redirect(url_for('all_articles'))
+
+    return redirect(url_for("login"))
+
+
+@app.route('/account/delete/<string:email>', methods=['GET', 'POST'])
+def delete_user(email=''):
+    return email
 
 
 # articles
@@ -442,7 +475,7 @@ def logout():
 @app.route('/articles')
 def all_articles():
 
-    articles = ''
+    articles = []
 
     connection = ssqlite(DATABASE_NAME)
 
@@ -470,28 +503,26 @@ def read_article(article_id):
     sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
     article = db_conn.run_query(sql_query, post_id).fetchone()
 
-    if article:
-
-        sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
-        comments_result = db_conn.run_query(sql_query, post_id).fetchall()
-
-        if comments_result:
-            comments = comments_result
-
-    else:
+    if not article:
         return redirect(url_for('all_articles'))
+
+    sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
+    comments_result = db_conn.run_query(sql_query, post_id).fetchall()
+
+    if comments_result:
+        comments = comments_result
 
     return render_template('/article.html', article=article, comments=comments)
 
 
 @app.route("/article/delete/<string:article_id>")
 def delete_article(article_id):
-
-    if 'token' in session:
+    if is_set_session():
         user_email = session.get('email')
-        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
-
         db_conn = ssqlite(DATABASE_NAME)
+
+        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
+        
         email_result = db_conn.run_query(sql_query, article_id).fetchone()
 
         if email_result:
@@ -513,32 +544,14 @@ def delete_article(article_id):
 
         return redirect(url_for('read_article', article_id=article_id))
 
-    else:
-        return redirect(url_for('all_articles'))
-
-
-# function to read the article content and title
-def read_title_and_post(article_id):
-    id = article_id
-    db_conn = ssqlite(DATABASE_NAME)
-
-    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=?"
-    result = db_conn.run_query(sql_query, id).fetchone()
-
-    if result:
-        return result
-    else:
-        return False
-
 
 @app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
 def update_article(article_id):
-    if 'token' in session:
+    if is_set_session():
         if not read_title_and_post(article_id):
             return redirect(url_for('all_articles'))
         
         article = read_title_and_post(article_id)    
-
         post_id = article_id
 
         if request.form and request.method == 'POST':
@@ -568,19 +581,13 @@ def update_article(article_id):
                     # stamp the db
                     db_conn.stamp()
                     flash('update unsuccessful', 'danger')
-                    
-    else:
-        return redirect(url_for('all_articles'))
 
-    # flash(message, cat_filter)
     return render_template('update_article.html', article=article)
 
 
 @app.route('/article/write', methods=['GET', 'POST'])
 def write_article():
-    # instead of trying to get the session['token'], we rather check if there is 'token'
-    # as a key in the session global dictionary
-    if 'token' in session:
+    if is_set_session():
         user_email = session.get('email')
 
         message = ''
@@ -632,10 +639,6 @@ def write_article():
                         # redirect to index page
                         return redirect(url_for('index'))
 
-    else:
-        message = "Please login first"
-        return redirect(url_for('login'))
-
     flash(message, cat_filter)
 
     return render_template('write_article.html')
@@ -650,9 +653,9 @@ with app.test_request_context():
     # contact
     print(url_for('contact'))
     # email token
-    print(url_for('email_token'))
+    print(url_for('email_token', email='hello@hmail.com'))
     # password token
-    print(url_for('password_token'))
+    print(url_for('password_token', email='hello@hmail.com'))
     # user profile
     print(url_for('user_profile'))
     # forget password

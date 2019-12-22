@@ -35,11 +35,11 @@
 
         <!-- check if there is session -->
         {% if session.token and session.email %}
-        <a class="btn btn-sm btn-outline-primary" href="/user_profile">My account</a>
+        <a class="btn btn-sm btn-outline-primary" href="/setting/profile">My profile</a>
         <a class="btn btn-sm btn-outline-primary" href="/article/write">write article</a>
         <a class="btn btn-sm btn-outline-primary" href="/account/logout">Log out</a>
         {% else %}
-        <a class="btn btn-sm btn-outline-primary" href="/account/signup/">Sign Up</a>
+        <a class="btn btn-sm btn-outline-primary" href="/account/signup/">Sign up</a>
         <a class="btn btn-sm btn-outline-primary" href="/account/login/">Log in</a>
         {% endif %}
 

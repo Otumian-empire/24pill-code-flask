@@ -19,7 +19,7 @@
 		<div class="card-body text-capitalize">
 
 			<!-- first name form starts here -->
-			<form method="POST" action="" class="">
+			<form method="POST" action="/setting/firstname/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 					<div class="form-row">
@@ -69,7 +69,7 @@
 		<!-- card body for last name starts here -->
 		<div class="card-body text-capitalize">
 			<!-- last name form starts here -->
-			<form method="POST" action="" class="">
+			<form method="POST" action="/setting/lastname/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 					<div class="form-row">
@@ -118,7 +118,7 @@
 		<div class="card-body text-capitalize">
 
 			<!-- bio form starts here -->
-			<form method="POST" action="" class="">
+			<form method="POST" action="/setting/bio/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 
@@ -169,7 +169,7 @@
 		<!-- card body for email starts here -->
 		<div class="card-body text-capitalize">
 			<!-- email form starts here -->
-			<form method="POST" action="" class="">
+			<form method="POST" action="/setting/email/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 					<div class="form-row">
@@ -208,7 +208,8 @@
 		<div class="card-body">
 
 			<!-- password form starts here -->
-			<form method="POST" action="" class="">
+			
+			<form method="POST" action="/setting/password/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 
@@ -249,7 +250,8 @@
 		<div class="card-body">
 
 			<!-- password form starts here -->
-			<form method="POST" action="" class="">
+			<!-- /setting/firstname/{{user_data[3]}} -->
+			<form method="POST" action="/account/delete/{{user_data[3]}}" class="">
 
 				<div class="form-group">
 
