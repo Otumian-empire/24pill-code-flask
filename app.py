@@ -54,6 +54,52 @@ def read_title_and_post(article_id):
         return False
 
 
+# this function does the massive work in updating a users firstname, lastname and bio
+# call this function then pass in the user email
+# , the name of the field to update. the value to pass there is obtain from the form.
+# also we take the field name and the name of the button to that form
+def update_user_profile(email, set_field, field_name, btn_name):
+    if is_set_session():
+        if not email:
+            return False
+
+        if not request.form or not request.method == 'POST':
+            return False
+
+        if not email == session.get('email'):
+            return False
+    
+        if (
+                not request.form.get(field_name) or
+                not request.form.get(btn_name)):
+
+            message = 'There is an empty field, please fill it out'
+            cat_filter = 'danger'
+
+        else:
+            field_data = request.form.get(field_name)
+
+            connection = ssqlite(DATABASE_NAME)
+            sql_query = f"UPDATE `users` SET {set_field}=? WHERE `user_email`=?"
+
+            result = connection.run_query(sql_query, field_data, email)
+
+            if not result.rowcount == 1:
+                message = "update unsuccessful"
+                cat_filter = 'danger'
+                
+            else:
+                message = "update successful"
+                cat_filter = 'success'
+
+            # stamp the database - commit the changes and close connection
+            connection.stamp()
+
+        flash(message, cat_filter)
+
+        return True
+
+
 # index/home page
 @app.route('/')
 @app.route('/index')
@@ -98,34 +144,45 @@ def user_profile():
 
 @app.route('/setting/firstname/<string:email>', methods=['GET', 'POST'])
 def update_first_name(email=''):
-    return email
+    if update_user_profile(email, 'user_first_name', 'update_first_name', 'update_first_name_btn'):
+        return redirect(url_for('user_profile'))
+    else:
+        return redirect(url_for('logout'))
+
 
 
 @app.route('/setting/lastname/<string:email>', methods=['GET', 'POST'])
 def update_last_name(email=''):
-    return email
+    if update_user_profile(email, 'user_last_name', 'update_last_name', 'update_last_name_btn'):
+        return redirect(url_for('user_profile'))
+    else:
+        return redirect(url_for('logout'))
 
 
 @app.route('/setting/bio/<string:email>', methods=['GET', 'POST'])
 def update_bio(email=''):
-    return email
+    if update_user_profile(email, 'user_bio', 'update_bio', 'update_bio_btn'):
+        return redirect(url_for('user_profile'))
+    else:
+        return redirect(url_for('logout'))
 
 
 @app.route('/setting/email/<string:email>', methods=['GET', 'POST'])
 def email_token(email=''):
     # return render_template('email_token_field.html')
-    return email
+    return redirect(url_for('user_profile'))
 
 
 @app.route('/setting/password/<string:email>', methods=['GET', 'POST'])
 def password_token(email=''):
     # return render_template('password_token_field.html')
-    return email
+    return redirect(url_for('user_profile'))
 
 
 @app.route('/forget_password', methods=['GET', 'POST'])
 def forget_password():
-    return render_template('forget_password.html')
+    # return render_template('forget_password.html')
+    return redirect(url_for('logout'))
 
 
 # comments
@@ -467,7 +524,7 @@ def logout():
 
 @app.route('/account/delete/<string:email>', methods=['GET', 'POST'])
 def delete_user(email=''):
-    return email
+    return redirect(url_for('user_profile'))
 
 
 # articles
