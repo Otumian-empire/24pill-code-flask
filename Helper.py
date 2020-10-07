@@ -2,8 +2,9 @@ from datetime import datetime
 from http.client import HTTPSConnection as httpConn
 from passlib.hash import bcrypt
 from random import randint
-from string import (ascii_letters, ascii_lowercase, ascii_uppercase, digits,
-                    punctuation, whitespace)
+from string import (
+    ascii_letters, ascii_lowercase, ascii_uppercase,
+    digits, punctuation, whitespace)
 
 
 class Generator:
@@ -29,10 +30,12 @@ class Generator:
         return token
 
     def get_schar_count(self, data='', sack=[]):
-        """ Returns the number of specific characters in data that is in sack
+        """
+        Returns the number of specific characters in data that is in sack
         By default, data is an empty string and sack is an empty list
         Both data and list, are iterables
-        If neither data or sack is set, zero in returned """
+        If neither data or sack is set, zero in returned
+        """
 
         if not data or not sack:
             return 0
@@ -61,19 +64,25 @@ class Generator:
         return now.strftime("%B %d, %Y - %H:%M:%S")
 
 
+class DataSizeRange:
+    """
+    Set the min_range and max_range for data to evalute valid size
+    By default, min_range=6 and max_range=20
+    """
+
+    def __init__(self, min_range=6, max_range=20):
+        self.min_range = min_range
+        self.max_range = max_range
+
+
 class Validator:
 
-    def validate_size(self, data, recommended_size=[6, 20]):
-        """ 
-        Return is the size of the data is greater than or equal to the recommended size.
-        By default, the recommended size is [6, 20].
-        Example: Validator().validate_size(data, [6, 20]).
-        Returns True if 6 <= size of data <= 20, else False.
+    def validate_size(self, data, dataSizeRange):
         """
-        data_size = len(data)
-        if recommended_size[0] <= data_size <= recommended_size[1]:
-            return True
-        return False
+        Pass DataSizeRange Object to the validate_size method with the erquired range
+        Returns True if size (len) of data is in bounded inclusively else, False
+        """
+        return dataSizeRange.min_range <= len(data) <= dataSizeRange.max_range
 
     def is_email_valid(self, email=""):
         """ returns a bool if a an email, is a valid one with the domain as a tuple"""
@@ -111,7 +120,7 @@ class Validator:
         if at_char not in email:
             return False
 
-        # there must one and only one @
+        # there must be one and only one @
         if email.count(at_char) > 1:
             return False
 
@@ -126,8 +135,15 @@ class Validator:
                 return False
 
         # quote string must be dot seperated or a dot shouldn't follow a dot
-        if dot in local and (local[local.index(dot)] == local[local.index(dot) + 1]):
-            return False
+        if dot in local:
+            try:
+                dot_position_in_local = local.index(dot)
+
+                if local[dot_position_in_local + 1] == dot:
+                    return False
+            except:
+                print("There is no dot in the local")
+                pass
 
         # local.startswith('.') and local.endswith('.') == False
         if local.startswith(dot) or local.endswith(dot):
@@ -139,14 +155,15 @@ class Validator:
 
         # quote string must be dot seperated or a dot shouldn't follow a dot
         # in domain
-        if dot in domain and (domain[domain.index(dot)] == domain[domain.index(dot) + 1]):
+        dot_position_in_domain = domain.index(dot)
+        if dot in domain and (domain[dot_position_in_domain] == domain[dot_position_in_domain + 1]):
             return False
 
         # domain, . cant't be first or last char
         if domain.startswith(dot) or domain.endswith(dot):
             return False
 
-        return True, domain
+        return True
 
     def email_exist(self, domain):
         """ ping the domain's server to see if the domain actuall exists
@@ -163,27 +180,31 @@ class Validator:
     def is_valid_password(self, password):
         """ returns True when the password  is valid, else False.
         The password must satisfy these conditions:
-        * no leading or trailing while spaces spaces - so we strip them off
+        * no leading or trailing white spaces - so we strip them off
         * Should be between 6 to 20 characters long
         * must exclude any of these, {*%;<>\{}[]+=?&,:'"` } and blank space
         * must have at least one number.
         * must have at least one lowercase character.
         * must have at least one upppercase character.
         * must have at least one special symbol. {!@#$^&()_.-}.
-         """
+        """
+
         # Conditions for a valid password are:
+
+        # password must not be a falsy, empty str or 0 or white space
         if not password:
             return False
 
         # no leading or trailing while spaces spaces
         password = password.strip()
 
-        # *Should be between 6 to 20 characters long. there is the notion of no max limit
+        # Should be between 6 to 20 characters long. there is the notion of no max limit
         # I think the size function should handle this
         MIN_PASS_SIZE = 6
         MAX_PASS_SIZE = 20
 
-        if not Validator().validate_size(password, [MIN_PASS_SIZE, MAX_PASS_SIZE]):
+        if not Validator().validate_size(
+                password, DataSizeRange(MIN_PASS_SIZE, MAX_PASS_SIZE)):
             return False
 
         # avoid {*%;<>\{}[]+=?&,:'"` } and blank space

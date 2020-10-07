@@ -3,6 +3,7 @@ from flask import (Flask, flash, redirect, render_template, request, session,
 
 from Helper import Generator as Gen
 from Helper import Validator as Val
+from Helper import DataSizeRange
 from ssqlite import ssqlite
 
 app = Flask(__name__)
@@ -399,7 +400,7 @@ def signup(email=''):
                             message = "Invalid password format"
 
                         else:
-                            if not Val().validate_size(sign_up_password):
+                            if not Val().validate_size(sign_up_password, DataSizeRange(6, 20)):
                                 message = "Check password length, 6 - 20"
 
                             else:
@@ -471,7 +472,7 @@ def login(email=''):
                         message = "Invalid password format"
 
                     else:
-                        if not Val().validate_size(password):
+                        if not Val().validate_size(password, DataSizeRange(6, 20)):
                             message = "Check password length, 6 - 20"
 
                         else:
