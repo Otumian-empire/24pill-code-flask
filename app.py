@@ -22,6 +22,8 @@ def is_set_session():
         return True
 
 # get user details by passing email as the argument
+
+
 def get_user_details(email):
     """ read user details, given the email, returns False is the email=='' or the query is unsuccessful """
     if not email:
@@ -68,7 +70,7 @@ def update_user_profile(email, set_field, field_name, btn_name):
 
         if not email == session.get('email'):
             return False
-    
+
         if (
                 not request.form.get(field_name) or
                 not request.form.get(btn_name)):
@@ -87,7 +89,7 @@ def update_user_profile(email, set_field, field_name, btn_name):
             if not result.rowcount == 1:
                 message = "update unsuccessful"
                 cat_filter = 'danger'
-                
+
             else:
                 message = "update successful"
                 cat_filter = 'success'
@@ -148,7 +150,6 @@ def update_first_name(email=''):
         return redirect(url_for('user_profile'))
     else:
         return redirect(url_for('logout'))
-
 
 
 @app.route('/setting/lastname/<string:email>', methods=['GET', 'POST'])
@@ -264,7 +265,7 @@ def delete_comment(comment_id):
                 flash(message, cat_filter)
 
             return redirect(url_for('read_article', article_id=post_id))
-            
+
         else:
             return redirect(url_for('logout'))
 
@@ -335,7 +336,7 @@ def update_comment(comment_id):
 
                     if not result.rowcount == 1:
                         message = "could not update the comment"
-                    
+
                     else:
                         # a row is affected
                         message = "comment updated successfully"
@@ -579,7 +580,7 @@ def delete_article(article_id):
         db_conn = ssqlite(DATABASE_NAME)
 
         sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
-        
+
         email_result = db_conn.run_query(sql_query, article_id).fetchone()
 
         if email_result:
@@ -590,9 +591,10 @@ def delete_article(article_id):
                 if delete_result.rowcount:
                     # delete all comments related to this article.
                     # it is a success either a row is affected or not
-                    db_conn.run_query("DELETE FROM `comments` WHERE `post_id`=?", article_id)
+                    db_conn.run_query(
+                        "DELETE FROM `comments` WHERE `post_id`=?", article_id)
                     flash("Article deleted successfully", 'success')
-                    
+
                 else:
                     flash("Article deletion unsuccessful", 'danger')
 
@@ -607,8 +609,8 @@ def update_article(article_id):
     if is_set_session():
         if not read_title_and_post(article_id):
             return redirect(url_for('all_articles'))
-        
-        article = read_title_and_post(article_id)    
+
+        article = read_title_and_post(article_id)
         post_id = article_id
 
         if request.form and request.method == 'POST':
