@@ -1,8 +1,19 @@
+.container, #navigation-bar  {
+    border-radius: 5px;
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+#first-div {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
 footer {
     margin-top: 15px;
 }
 
-.footer-bottom{
+.footer-bottom {
     border-top: 1px grey solid;
     width: 80%;
     margin: 20px auto 10px auto;

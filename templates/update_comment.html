@@ -8,12 +8,12 @@
 
 			<div class="card-header">Update Comment</div>
 
-			<form action="/comment/update/{{comment[0]}}" method="post">
+			<form action="/comment/update/{{ comment[0] }}" method="post">
 				<div class="text-area">
 
 					<textarea name="update_comment_content" id="update_comment_content"
 						class="p-1 md-textarea form-control rounded-0" rows="3" placeholder="article body.."
-						value="">{{comment[1]}}</textarea>
+						value="">{{ comment[1] }}</textarea>
 
 					<br>
 					<button name="update_comment_submit_button" type="submit" class="btn btn-success btn-block" value="update_comment">UPDATE COMMENT</button>

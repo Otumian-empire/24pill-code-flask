@@ -16,7 +16,7 @@
 					<div class="form-label-group">
 						<input type="email" class="form-control" id="email" name="login_email"
 							placeholder="Name@example.com"
-							value="{% if request.form.get('login_email') %}{{request.form.get('login_email')}}{% endif %}"
+							value="{% if request.form.get('login_email') %}{{ request.form.get('login_email') }}{% endif %}"
 							autofocus>
 						<label for="email" class="text-capitalize">Email address</label>
 					</div>
@@ -41,7 +41,7 @@
 
 		<div class="text-center">
 			<a class="d-block small mt-3 text-capitalize" href="/account/signup/">Register an Account</a>
-			<a class="d-block small text-capitalize" href="/forgot_password">Forgot Password?</a>
+			<a class="d-block small text-capitalize" href="/setting/forget_password">Forgot Password?</a>
 		</div>
 
 	</div>

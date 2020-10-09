@@ -107,7 +107,6 @@ def update_user_profile(email, set_field, field_name, btn_name):
 
 # index/home page
 @app.route('/')
-@app.route('/index')
 def index():
     db_conn = ssqlite(DATABASE_NAME)
     articles = db_conn.run_query(
@@ -183,10 +182,16 @@ def password_token(email=''):
     return redirect(url_for('user_profile'))
 
 
-@app.route('/forget_password', methods=['GET', 'POST'])
+@app.route('/setting/forget_password', methods=['GET', 'POST'])
 def forget_password():
-    # return render_template('forget_password.html')
-    return redirect(url_for('logout'))
+    return render_template('forget_password.html')
+    # return redirect(url_for('logout'))
+
+
+@app.route('/setting/reset_password/<string:email>', methods=['GET', 'POST'])
+def reset_password(email=''):
+    return render_template('reset_password.html')
+    # return redirect(url_for('logout'))
 
 
 # comments

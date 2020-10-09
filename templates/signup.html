@@ -19,7 +19,7 @@
 							<div class="form-label-group">
 								<input type="text" class="form-control" id="sign_up_first_name"
 									name="sign_up_first_name" placeholder="First name"
-									value="{% if request.form.get('sign_up_first_name') %}{{request.form.get('sign_up_first_name')}}{% endif %}"
+									value="{% if request.form.get('sign_up_first_name') %}{{ request.form.get('sign_up_first_name') }}{% endif %}"
 									autofocus />
 								<label for="first name" class="text-capitalize">First name</label>
 							</div>
@@ -31,7 +31,7 @@
 							<div class="form-label-group">
 								<input type="text" class="form-control" id="sign_up_last_name" name="sign_up_last_name"
 									placeholder="Last name"
-									value="{% if request.form.get('sign_up_last_name') %}{{request.form.get('sign_up_last_name')}}{% endif %}" />
+									value="{% if request.form.get('sign_up_last_name') %}{{ request.form.get('sign_up_last_name') }}{% endif %}" />
 								<label for="last name" class="text-capitalize">Last name</label>
 							</div>
 
@@ -47,7 +47,7 @@
 					<div class="form-label-group">
 						<input type="email" class="form-control" id="sign_up_email" name="sign_up_email"
 							placeholder="Name@example.com"
-							value="{% if email %}{{ email }}{% elif request.form.get('sign_up_email') %} {{ request.form.get('sign_up_email') }}{% endif %}" />
+							value="{% if email %}{{ email  }}{% elif request.form.get('sign_up_email') %} {{ request.form.get('sign_up_email')  }}{% endif %}" />
 						<label for="email">Email address</label>
 					</div>
 				</div>
@@ -88,7 +88,7 @@
 					<div class="form-label-group">
 
 						<textarea class="form-control" id="user_bio" name="sign_up_user_bio" rows="3"
-							placeholder="About me">{% if request.form.get('sign_up_user_bio') %}{{request.form.get('sign_up_user_bio')}}{% endif %}</textarea>
+							placeholder="About me">{% if request.form.get('sign_up_user_bio') %}{{ request.form.get('sign_up_user_bio') }}{% endif %}</textarea>
 						<label for="user description" class="text-capitalize">Bio</label>
 
 					</div>
