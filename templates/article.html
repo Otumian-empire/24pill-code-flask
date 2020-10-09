@@ -113,10 +113,11 @@
 
 </div>
 
-<script src="{{url_for('static', filename='js/tinymce/js/tinymce/tinymce.min.js')}}"></script>
+{% include 'include/tinymce.html' %}
 <script>
 	tinymce.init({
 		selector: '#comment-box'
 	});
 </script>
+
 {% endblock %}
