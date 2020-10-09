@@ -9,6 +9,8 @@ from ssqlite import ssqlite
 app = Flask(__name__)
 app.debug = True
 app.secret_key = "12345"  # use a better secret_key
+app.templates_auto_reload = True
+app.cache_type = "null"
 
 # database name
 DATABASE_NAME = "pill_code_db.db"
