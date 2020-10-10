@@ -1,10 +1,11 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 
+from Helper import DataSizeRange
 from Helper import Generator as Gen
 from Helper import Validator as Val
-from Helper import DataSizeRange
-from ssqlite import ssqlite
+# from ssqlite import ssqlite
+from smysql import smysql
 
 app = Flask(__name__)
 app.debug = True
@@ -13,10 +14,15 @@ app.templates_auto_reload = True
 app.cache_type = "null"
 
 # database name
-DATABASE_NAME = "pill_code_db.db"
-
+# DATABASE_NAME = "pill_code_db.db"  # sqlite db_name
+DATABASE_NAME = "pill_code_db"  # mysql db_name
+USERNAME = "root"
+HOST = "localhost"
+PASSWORD = ""
 
 # check if there is session
+
+
 def is_set_session():
     """ check if there is session. We do this to see if user has actually signed in """
     if not 'token' in session:
@@ -32,11 +38,13 @@ def get_user_details(email):
     if not email:
         return False
 
-    db_conn = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
 
-    sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=?"
+    sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=%s"
 
-    user_data = db_conn.run_query(sql_query, email).fetchone()
+    cur = db_conn.run_query(sql_query, email)
+    user_data = cur.fetchone() if cur else None
     db_conn.stamp()
 
     if user_data:
@@ -48,10 +56,12 @@ def get_user_details(email):
 # function to read the article content and title
 def read_title_and_post(article_id):
     id = article_id
-    db_conn = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
 
-    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=?"
-    result = db_conn.run_query(sql_query, id).fetchone()
+    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=%s"
+    cur = db_conn.run_query(sql_query, id)
+    result = cur.fetchone() if cur else None
 
     if result:
         return result
@@ -84,12 +94,13 @@ def update_user_profile(email, set_field, field_name, btn_name):
         else:
             field_data = request.form.get(field_name)
 
-            connection = ssqlite(DATABASE_NAME)
-            sql_query = f"UPDATE `users` SET {set_field}=? WHERE `user_email`=?"
+            sql_query = f"UPDATE `users` SET {set_field}=%s WHERE `user_email`=%s"
+            db_conn = smysql(host=HOST, user=USERNAME,
+                             password=PASSWORD, database=DATABASE_NAME)
 
-            result = connection.run_query(sql_query, field_data, email)
+            result = db_conn.run_query(sql_query, field_data, email)
 
-            if not result.rowcount == 1:
+            if not result.rowcount:
                 message = "update unsuccessful"
                 cat_filter = 'danger'
 
@@ -98,7 +109,7 @@ def update_user_profile(email, set_field, field_name, btn_name):
                 cat_filter = 'success'
 
             # stamp the database - commit the changes and close connection
-            connection.stamp()
+            db_conn.stamp()
 
         flash(message, cat_filter)
 
@@ -108,11 +119,15 @@ def update_user_profile(email, set_field, field_name, btn_name):
 # index/home page
 @app.route('/')
 def index():
-    db_conn = ssqlite(DATABASE_NAME)
-    articles = db_conn.run_query(
-        "SELECT * FROM `articles` ORDER BY `post_date` DESC").fetchall()
+    # db_conn = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
+    cur = db_conn.run_query(
+        "SELECT * FROM `articles` ORDER BY `post_date` DESC")
 
-    if articles != None:
+    if cur != None:
+        articles = cur.fetchall()
+
         return render_template("index.html", articles=articles)
 
     return render_template("index.html")
@@ -222,9 +237,10 @@ def write_comment(article_id):
                     user_email = session.get('email')
                     comment_date = Gen().get_current_date_time()
 
-                    db_conn = ssqlite(DATABASE_NAME)
+                    db_conn = smysql(host=HOST, user=USERNAME,
+                                     password=PASSWORD, database=DATABASE_NAME)
 
-                    sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(?, ?, ?, ?)"
+                    sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(%s, %s, %s, %s)"
                     result = db_conn.run_query(
                         sql_query, article_id, comment_text, comment_date, user_email)
 
@@ -247,17 +263,19 @@ def delete_comment(comment_id):
     if is_set_session():
         user_email = session.get('email')
 
-        db_conn = ssqlite(DATABASE_NAME)
-        sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=?"
+        db_conn = smysql(host=HOST, user=USERNAME,
+                         password=PASSWORD, database=DATABASE_NAME)
+        sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=%s"
 
-        result = db_conn.run_query(sql_query, comment_id).fetchone()
+        cur = db_conn.run_query(sql_query, comment_id)
+        result = cur.fetchone() if cur else None
 
         if result:
             email = result[0]
             post_id = result[1]
 
             if user_email == email:
-                sql_query = "DELETE FROM `comments` WHERE `comment_id`=?"
+                sql_query = "DELETE FROM `comments` WHERE `comment_id`=%s"
 
                 result = db_conn.run_query(sql_query, comment_id)
 
@@ -281,10 +299,13 @@ def delete_comment(comment_id):
 # read comment
 def read_comment(comment_id):
     """ return a tuple of the post_id, comment_text and user_email """
-    db_conn = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
 
-    sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=?"
-    result = db_conn.run_query(sql_query, comment_id).fetchone()
+    sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=%s"
+
+    cur = db_conn.run_query(sql_query, comment_id)
+    result = cur.fetchone() if cur else None
     db_conn.stamp()
 
     if result:
@@ -336,13 +357,14 @@ def update_comment(comment_id):
                 else:
                     comment_text = request.form.get('update_comment_content')
 
-                    connection = ssqlite(DATABASE_NAME)
-                    sql_query = "UPDATE `comments` SET `comment_text`=? WHERE `comment_id`=? AND `user_email`=?"
+                    db_conn = smysql(host=HOST, user=USERNAME,
+                                     password=PASSWORD, database=DATABASE_NAME)
+                    sql_query = "UPDATE `comments` SET `comment_text`=%s WHERE `comment_id`=%s AND `user_email`=%s"
 
-                    result = connection.run_query(
+                    result = db_conn.run_query(
                         sql_query, comment_text, comment_id, user_email)
 
-                    if not result.rowcount == 1:
+                    if not result.rowcount:
                         message = "could not update the comment"
 
                     else:
@@ -351,7 +373,7 @@ def update_comment(comment_id):
                         cat_filter = "success"
 
                     # stamp the database - commit the changes and close connection
-                    connection.stamp()
+                    db_conn.stamp()
 
                     flash(message, cat_filter)
 
@@ -414,33 +436,42 @@ def signup(email=''):
                                 hashed_passwd = Gen().get_bcrypt_hashed_passwd(sign_up_password)
                                 registered_date = Gen().get_current_date_time()
 
-                                connection = ssqlite(DATABASE_NAME)
-                                sql_query = "INSERT INTO `users`(`user_first_name`, `user_last_name`, `user_email`, `user_password`, `user_bio`, `user_register_date`) VALUES(?, ?, ?, ?, ?, ?)"
+                                db_conn = smysql(host=HOST, user=USERNAME,
+                                                 password=PASSWORD, database=DATABASE_NAME)
 
-                                result = connection.run_query(
+                                sql_query = "SELECT user_email FROM `users` WHERE `user_email`=%s"
+
+                                cur = db_conn.run_query(sql_query, email)
+
+                                if cur:
+                                    return redirect(url_for('login', email=email))
+
+                                sql_query = "INSERT INTO `users`(`user_first_name`, `user_last_name`, `user_email`, `user_password`, `user_bio`, `user_register_date`) VALUES(%s, %s, %s, %s, %s, %s)"
+
+                                result = db_conn.run_query(
                                     sql_query, first_name, last_name, email, hashed_passwd, bio, registered_date)
 
-                                if not result:
-                                    message = "Error"
+                                # if not result:
+                                #     message = "Error"
 
-                                    # stamp the database - commit the changes and close connection
-                                    connection.stamp()
+                                #     # stamp the database - commit the changes and close connection
+                                #     db_conn.stamp()
 
-                                else:
+                                # else:
 
-                                    # create a session
-                                    session["token"] = Gen().generate_token()
-                                    session["email"] = email
+                                # create a session
+                                session["token"] = Gen().generate_token()
+                                session["email"] = email
 
-                                    # success
-                                    message = "signup successful"
-                                    cat_filter = "success"
+                                # success
+                                message = "signup successful"
+                                cat_filter = "success"
 
-                                    # stamp the database - commit the changes and close connection
-                                    connection.stamp()
+                                # stamp the database - commit the changes and close connection
+                                db_conn.stamp()
 
-                                    # redirect to index page
-                                    return redirect(url_for('index'))
+                                # redirect to index page
+                                return redirect(url_for('index'))
 
                     else:
                         message = "Invalide email format"
@@ -484,11 +515,13 @@ def login(email=''):
 
                         else:
 
-                            connection = ssqlite(DATABASE_NAME)
-                            sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=?"
+                            db_conn = smysql(host=HOST, user=USERNAME,
+                                             password=PASSWORD, database=DATABASE_NAME)
+                            sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=%s"
 
-                            user_password = connection.run_query(
-                                sql_query, email).fetchone()
+                            cur = db_conn.run_query(
+                                sql_query, email)
+                            user_password = cur.fetchone() if cur else None
 
                             if user_password != None:
                                 hashed_password = user_password[0]
@@ -513,13 +546,13 @@ def login(email=''):
                                 return redirect(url_for('signup', email=email))
 
                             # stamp the database - commit the changes and close connection
-                            connection.stamp()
+                            db_conn.stamp()
 
                 else:
                     message = "Invalide email format"
 
         flash(message, cat_filter)
-        return render_template('login.html')
+        return render_template('login.html', email=email)
 
 
 @app.route("/account/logout")
@@ -543,16 +576,16 @@ def all_articles():
 
     articles = []
 
-    connection = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
 
     sql_query = "SELECT `post_id`, `post_title`, `user_email`,`post_date` FROM `articles` ORDER BY `post_id` DESC"
 
-    result = connection.run_query(sql_query)
+    cur = db_conn.run_query(sql_query)
 
-    if result:
-        articles = result.fetchall()
+    articles = cur.fetchall() if cur else NoneI
 
-    connection.stamp()
+    db_conn.stamp()
 
     return render_template('all_articles.html', articles=articles)
 
@@ -564,16 +597,21 @@ def read_article(article_id):
 
     post_id = article_id
 
-    db_conn = ssqlite(DATABASE_NAME)
+    db_conn = smysql(host=HOST, user=USERNAME,
+                     password=PASSWORD, database=DATABASE_NAME)
 
-    sql_query = "SELECT * FROM `articles` WHERE `post_id`=?"
-    article = db_conn.run_query(sql_query, post_id).fetchone()
+    sql_query = "SELECT * FROM `articles` WHERE `post_id`=%s"
+
+    cur = db_conn.run_query(sql_query, post_id)
+    article = cur.fetchone() if cur else None
 
     if not article:
         return redirect(url_for('all_articles'))
 
-    sql_query = "SELECT * FROM `comments` WHERE `post_id`=? ORDER BY `comment_date` DESC"
-    comments_result = db_conn.run_query(sql_query, post_id).fetchall()
+    sql_query = "SELECT * FROM `comments` WHERE `post_id`=%s ORDER BY `comment_date` DESC"
+
+    cur = db_conn.run_query(sql_query, post_id)
+    comments_result = cur.fetchall() if cur else None
 
     if comments_result:
         comments = comments_result
@@ -585,22 +623,24 @@ def read_article(article_id):
 def delete_article(article_id):
     if is_set_session():
         user_email = session.get('email')
-        db_conn = ssqlite(DATABASE_NAME)
+        db_conn = smysql(host=HOST, user=USERNAME,
+                         password=PASSWORD, database=DATABASE_NAME)
 
-        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=?"
+        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=%s"
 
-        email_result = db_conn.run_query(sql_query, article_id).fetchone()
+        cur = db_conn.run_query(sql_query, article_id)
+        email_result = cur.fetchone() if cur else None
 
         if email_result:
             if email_result[0] == user_email:
                 delete_result = db_conn.run_query(
-                    "DELETE FROM `articles` WHERE `post_id`=? AND `user_email`=?", article_id, user_email)
+                    "DELETE FROM `articles` WHERE `post_id`=%s AND `user_email`=%s", article_id, user_email)
 
                 if delete_result.rowcount:
                     # delete all comments related to this article.
                     # it is a success either a row is affected or not
                     db_conn.run_query(
-                        "DELETE FROM `comments` WHERE `post_id`=?", article_id)
+                        "DELETE FROM `comments` WHERE `post_id`=%s", article_id)
                     flash("Article deleted successfully", 'success')
 
                 else:
@@ -631,13 +671,14 @@ def update_article(article_id):
                 post_content = request.form.get('update_post_content')
                 post_title = request.form.get('update_post_title')
 
-                db_conn = ssqlite(DATABASE_NAME)
+                db_conn = smysql(host=HOST, user=USERNAME,
+                                 password=PASSWORD, database=DATABASE_NAME)
 
-                sql_query = "UPDATE `articles` SET  `post_content`=?, `post_title`=? WHERE `post_id`=?"
+                sql_query = "UPDATE `articles` SET  `post_content`=%s, `post_title`=%s WHERE `post_id`=%s"
                 update_result = db_conn.run_query(
                     sql_query, post_content, post_title, post_id)
 
-                if update_result.rowcount == 1:
+                if update_result.rowcount:
                     # stamp the db
                     db_conn.stamp()
 
@@ -674,8 +715,8 @@ def write_article():
                         not request.form.get('post_submit_button')):
 
                     message = 'There are empty fields, please fill them out'
-                    print(request.form.get('post_title'), request.form.get(
-                        'post_content'), request.form.get('post_submit_button'))
+                    # print(request.form.get('post_title'), request.form.get(
+                    # 'post_content'), request.form.get('post_submit_button'))
 
                 else:
                     post_title = request.form.get('post_title')
@@ -683,19 +724,20 @@ def write_article():
 
                     # need some validation and verification
 
-                    connection = ssqlite(DATABASE_NAME)
+                    db_conn = smysql(host=HOST, user=USERNAME,
+                                     password=PASSWORD, database=DATABASE_NAME)
 
-                    sql_query = "INSERT INTO `articles`(`post_title`, `post_content`, `user_email`, `post_date`) VALUES(?, ?, ?, ?)"
+                    sql_query = "INSERT INTO `articles`(`post_title`, `post_content`, `user_email`, `post_date`) VALUES(%s, %s, %s, %s)"
                     post_date = Gen().get_current_date_time()
 
-                    result = connection.run_query(
+                    result = db_conn.run_query(
                         sql_query, post_title, post_content, user_email, post_date)
 
-                    if not result.rowcount > 0:
+                    if not result.rowcount:
                         message = "could not add article, please try again"
                     else:
                         # stamp the database - commit the changes and close connection
-                        connection.stamp()
+                        db_conn.stamp()
 
                         # success
                         message = "article added successfully"
