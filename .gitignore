@@ -1,3 +1,5 @@
 pill_code_db.db
 commit
 .commit.swp
+smysql.py
+ssqlite.py
