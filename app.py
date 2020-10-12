@@ -2,6 +2,8 @@ import mysql.connector
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 
+import datetime
+
 from Helper import DataSizeRange
 from Helper import Generator as Gen
 from Helper import Validator as Val
@@ -11,6 +13,7 @@ app.debug = True
 app.secret_key = "12345"  # use a better secret_key
 app.templates_auto_reload = True
 app.cache_type = "null"
+app.permanent_session_lifetime = datetime.timedelta(hours=1)
 
 DATABASE_NAME = "pill_code_db"  # mysql db_name
 USERNAME = "root"
@@ -26,7 +29,7 @@ def is_set_session():
 
     return 'token' in session and 'email' in session
 
-    # get user details by passing email as the argument
+    # get user details by paNoblessessing email as the argument
 
 
 def get_user_details(email):
@@ -495,30 +498,24 @@ def signup(email=''):
                             try:
                                 result = insert_cur.execute(sql_query, values)
 
-                                # if not result:
-                                #     message = "Error"
-
-                                #     # stamp the database - commit the changes and close connection
-                                #     db_conn.commit()
-                                #     db_conn.close()
-
-                                # else:
-
                                 # create a session
                                 session["token"] = Gen().generate_token()
                                 session["email"] = email
+
+                                print(session)
 
                                 # success
                                 message = "signup successful"
                                 cat_filter = "success"
 
-                                # stamp the database - commit the changes and close connection
+                                # stamp the database - comNoblessemit the changes and close connection
                                 db_conn.commit()
                                 db_conn.close()
 
                                 # redirect to index page
                                 return redirect(url_for('index'))
-                            except:
+                            except (mysql.connector.Error, Exception) as e:
+                                print(str(e))
                                 message = "signup unsuccessful"
                                 cat_filter = "danger"
                                 return render_template('signup.html', email=email)
@@ -534,78 +531,70 @@ def signup(email=''):
 @app.route('/account/login/', methods=['GET', 'POST'])
 @app.route('/account/login/<string:email>', methods=['GET', 'POST'])
 def login(email=''):
-    if is_set_session():
-        return redirect(url_for('logout'))
-
     message = ''
     cat_filter = 'danger'
 
-    if request.form and request.method != 'POST':
-        message = 'Request method is not POST'
+    if 'token' in session or 'email' in session:
+        return redirect(url_for('logout'))
 
-    else:
-        email = request.form.get('login_email')
-        password = request.form.get('login_password')
-        login_button = request.form.get('login_button')
+    if request.method != 'POST':
+        message = 'Enter the needed credentials'
+        flash(message, cat_filter)
+        return render_template('login.html', email=email)
 
-        if not email or not password or not login_button:
-            message = 'There are empty fields, please fill them out'
+    email = request.form.get('login_email')
+    password = request.form.get('login_password')
+    login_button = request.form.get('login_button')
 
-        else:
+    if not email or not password or not login_button:
+        message = 'Email and Password are required for a login, please...'
+        flash(message, cat_filter)
+        return render_template('login.html', email=email)
 
-            if Val().is_email_valid(email):
+    if (
+            not Val().is_email_valid(email) or
+            not Val().validate_size(password, DataSizeRange(6, 20)) or
+            not Val().is_valid_password(password)):
 
-                if not Val().is_valid_password(password):
-                    message = "Invalid password format"
+        message = "Invalide credentials, check and enter again"
+        flash(message, cat_filter)
+        return render_template('login.html', email=email)
 
-                else:
-                    if not Val().validate_size(password, DataSizeRange(6, 20)):
-                        message = "Check password length, 6 - 20"
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-                    else:
+        sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=%s"
 
-                        db_conn = mysql.connector.connect(
-                            host=HOST, user=USERNAME,
-                            password=PASSWORD, database=DATABASE_NAME, buffered=True)
+        cur = db_conn.cursor()
+        cur.execute(sql_query, (email,))
 
-                        sql_query = "SELECT `user_password` FROM `users` WHERE `user_email`=%s"
+        if not cur:
+            return redirect(url_for('signup', email=email))
 
-                        cur = db_conn.cursor()
+        result = cur.fetchone()
+        hashed_password = result[0]
 
-                        result = cur.execute(sql_query, (email,))
+        if not Val().is_valid_hash(password, hashed_password):
+            message = "Invalid credentials, please check and enter again ..."
+            flash(message, cat_filter)
+            return render_template('login.html', email=email)
 
-                        user = result.fetchone() if result else None
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        message = "There was an error when loging in, please try again in a few seconds later..."
+        flash(message, cat_filter)
+        return render_template('login.html', email=email)
 
-                        if user:
-                            hashed_password = user[0]
+    session["token"] = Gen().generate_token()
+    session["email"] = email
 
-                            if not Val().is_valid_hash(password, hashed_password):
-                                message = "Invalid credentials..."
+    # success
+    message = "login successfull"
+    cat_filter = "success"
 
-                            else:
-                                # create a session
-                                session["token"] = Gen().generate_token()
-                                session["email"] = email
-
-                                # success
-                                message = "login successfull"
-                                cat_filter = "success"
-
-                                # redirect to index page
-                                return redirect(url_for('index'))
-                        else:
-                            # redirect user to sign up page with the email
-                            # message = "Kindly login, strange credentials..."
-                            return redirect(url_for('signup', email=email))
-
-                        # stamp the database - commit the changes and close connection
-                        db_conn.close()
-
-            else:
-                message = "Invalide email format"
-
-    flash(message, cat_filter)
-    return render_template('login.html', email=email)
+    return redirect(url_for('index'))
 
 
 @app.route("/account/logout")

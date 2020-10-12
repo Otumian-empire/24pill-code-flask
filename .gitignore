@@ -3,3 +3,4 @@ commit
 .commit.swp
 smysql.py
 ssqlite.py
+sample.py

@@ -143,7 +143,7 @@ class Validator:
                     return False
             except:
                 print("There is no dot in the local")
-                pass
+                return False
 
         # local.startswith('.') and local.endswith('.') == False
         if local.startswith(dot) or local.endswith(dot):
