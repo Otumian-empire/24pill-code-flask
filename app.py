@@ -29,37 +29,6 @@ def is_set_session():
 
     return 'token' in session and 'email' in session
 
-    # get user details by paNoblessessing email as the argument
-
-
-def get_user_details(email):
-    """
-    read user details, given the email, returns False is the email==''
-    or the query is unsuccessful
-    """
-
-    if not email:
-        return False
-
-    try:
-        db_conn = mysql.connector.connect(
-            host=HOST, user=USERNAME,
-            password=PASSWORD, database=DATABASE_NAME, buffered=True)
-
-        sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=%s"
-
-        cur = db_conn.cursor()
-
-        result = cur.execute(sql_query, (email,))
-
-        user_data = result.fetchone() if result else None
-
-        db_conn.close()
-
-        return user_data
-    except:
-        return False
-
 
 # function to read the article content and title
 def read_title_and_post(article_id):
@@ -172,12 +141,31 @@ def contact():
 @app.route('/setting/', methods=['GET', 'POST'])
 @app.route('/setting/profile', methods=['GET', 'POST'])
 def user_profile():
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
-    user_email = session.get('email')
+    try:
+        email = session.get('email')
 
-    user_data = get_user_details(user_email)
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
+
+        sql_query = "SELECT `user_first_name`, `user_last_name`, `user_bio`, `user_email` FROM `users` WHERE `user_email`=%s"
+
+        cur = db_conn.cursor()
+        cur.execute(sql_query, (email,))
+
+        if not cur:
+            return redirect(url_for('logout'))
+
+        user_data = cur.fetchone()
+
+        db_conn.close()
+
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return redirect(url_for('logout'))
 
     if not user_data:
         return redirect(url_for('login'))
