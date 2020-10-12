@@ -13,7 +13,7 @@ app.debug = True
 app.secret_key = "12345"  # use a better secret_key
 app.templates_auto_reload = True
 app.cache_type = "null"
-app.permanent_session_lifetime = datetime.timedelta(minutes=10)
+app.permanent_session_lifetime = datetime.timedelta(hours=1)
 
 DATABASE_NAME = "pill_code_db"  # mysql db_name
 USERNAME = "root"
@@ -211,25 +211,25 @@ def update_bio(email=''):
 @app.route('/setting/email/<string:email>', methods=['GET', 'POST'])
 def email_token(email=''):
     # return render_template('email_token_field.html')
-    return redirect(url_for('user_profile'))
+    return redirect(url_for('index'))
 
 
 @app.route('/setting/password/<string:email>', methods=['GET', 'POST'])
 def password_token(email=''):
     # return render_template('password_token_field.html')
-    return redirect(url_for('user_profile'))
+    return redirect(url_for('index'))
 
 
 @app.route('/setting/forget_password', methods=['GET', 'POST'])
 def forget_password():
-    return render_template('forget_password.html')
-    # return redirect(url_for('logout'))
+    # return render_template('forget_password.html')
+    return redirect(url_for('index'))
 
 
 @app.route('/setting/reset_password/<string:email>', methods=['GET', 'POST'])
 def reset_password(email=''):
-    return render_template('reset_password.html')
-    # return redirect(url_for('logout'))
+    # return render_template('reset_password.html')
+    return redirect(url_for('index'))
 
 
 # add a comment
