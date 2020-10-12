@@ -23,22 +23,31 @@ PASSWORD = ""
 
 # function to read the article content and title
 def read_title_and_post(article_id):
-    id = article_id
+    
+    try:
+        id = article_id
 
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=%s"
+        sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=%s"
 
-    cur = db_conn.cursor()
+        cur = db_conn.cursor()
+        cur.execute(sql_query, (id, ))
 
-    result = cur.execute(sql_query, (id, ))
-    data = cur.fetchone() if result else None
+        if not cur:
+            return False
 
-    db_conn.close()
+        data = cur.fetchone()
 
-    return data if data else False
+        db_conn.close()
+
+        return data
+
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return False
 
 
 # this function does the massive work in updating a users firstname, lastname and bio
@@ -172,6 +181,7 @@ def user_profile():
     return render_template('user_profile.html', user_data=user_data)
 
 
+# update firstname
 @app.route('/setting/firstname/<string:email>', methods=['GET', 'POST'])
 def update_first_name(email=''):
     if update_user_profile(email, 'user_first_name', 'update_first_name', 'update_first_name_btn'):
@@ -180,6 +190,7 @@ def update_first_name(email=''):
         return redirect(url_for('logout'))
 
 
+# update lastname
 @app.route('/setting/lastname/<string:email>', methods=['GET', 'POST'])
 def update_last_name(email=''):
     if update_user_profile(email, 'user_last_name', 'update_last_name', 'update_last_name_btn'):
@@ -188,6 +199,7 @@ def update_last_name(email=''):
         return redirect(url_for('logout'))
 
 
+# update bio
 @app.route('/setting/bio/<string:email>', methods=['GET', 'POST'])
 def update_bio(email=''):
     if update_user_profile(email, 'user_bio', 'update_bio', 'update_bio_btn'):
@@ -220,7 +232,7 @@ def reset_password(email=''):
     # return redirect(url_for('logout'))
 
 
-# comments
+# add a comment
 @app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
 def write_comment(article_id):
 
@@ -230,43 +242,47 @@ def write_comment(article_id):
     message = ''
     cat_filter = "danger"
 
-    if not request.form:
-        message = "There is no request form"
+    if request.method != 'POST':
+        message = 'At least of something to say ...'
+        flash(message, cat_filter)
+        return redirect(url_for('read_article', article_id=article_id))
 
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+    comment_text = request.form.get('comment_box')
+    add_comment_btn = request.form.get('add_comment_btn')
+
+    if not comment_text or not add_comment_btn:
+        message = 'Comment is empty'
+        flash(message, cat_filter)
+        return redirect(url_for('read_article', article_id=article_id))
+
+    try:
+        user_email = session.get('email')
+        comment_date = Gen().get_current_date_time()
+
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
+
+        sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(%s, %s, %s, %s)"
+        values = (article_id, comment_text, comment_date, user_email)
+
+        cur = db_conn.cursor()
+        cur.execute(sql_query, values)
+
+        if cur:
+            message = "Comment added successfully"
+            cat_filter = 'success'
+            db_conn.commit()
 
         else:
-            comment_text = request.form.get('comment_box')
-            add_comment_btn = request.form.get('add_comment_btn')
+            message = "could not add comment"
 
-            if not comment_text or not add_comment_btn:
-                message = 'Comment is empty'
+        db_conn.close()
 
-            else:
-                user_email = session.get('email')
-                comment_date = Gen().get_current_date_time()
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return redirect(url_for('read_article', article_id=article_id))
 
-                db_conn = mysql.connector.connect(
-                    host=HOST, user=USERNAME,
-                    password=PASSWORD, database=DATABASE_NAME, buffered=True)
-
-                sql_query = "INSERT INTO `comments`(`post_id`, `comment_text`, `comment_date`, `user_email`) VALUES(%s, %s, %s, %s)"
-                values = (article_id, comment_text, comment_date, user_email)
-
-                cur = db_conn.cursor()
-                result = cur.execute(sql_query, values)
-
-                if result.rowcount:
-                    message = "Comment added successfully"
-                    cat_filter = 'success'
-
-                else:
-                    message = "could not add comment"
-
-                db_conn.commit()
-                db_conn.close()
 
     flash(message, cat_filter)
 
@@ -320,21 +336,31 @@ def delete_comment(comment_id):
 
 # read comment
 def read_comment(comment_id):
-    """ return a tuple of the post_id, comment_text and user_email """
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+    """
+    return a tuple of the post_id, comment_text and user_email
+    """
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=%s"
+        sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=%s"
 
-    cur = db_conn.cursor()
-    cur = cur.execute(sql_query, (comment_id, ))
+        cur = db_conn.cursor()
+        cur.execute(sql_query, (comment_id, ))
 
-    result = cur.fetchone() if cur else None
+        if not cur:
+            return False
 
-    db_conn.close()
+        result = cur.fetchone()
 
-    return result if result else False
+        db_conn.close()
+
+        return result
+
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return False
 
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
