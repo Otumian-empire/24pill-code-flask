@@ -289,48 +289,54 @@ def write_comment(article_id):
     return redirect(url_for('read_article', article_id=article_id))
 
 
+# delete comment
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
 def delete_comment(comment_id):
     if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
-    user_email = session.get('email')
+    try:
+        user_email = session.get('email')
 
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=%s"
+        sql_query = "SELECT `user_email`, `post_id` FROM `comments` WHERE `comment_id`=%s"
 
-    select_cur = db_conn.cursor()
-    select_cur = cur.execute(sql_query, (comment_id,))
+        select_cur = db_conn.cursor()
+        select_cur.execute(sql_query, (comment_id,))
 
-    result = select_cur.fetchone() if select_cur else None
+        if not select_cur:
+            return redirect(url_for('articles'))
 
-    if result:
-        email = result[0]
+        result = select_cur.fetchone()
+
+        author_email = result[0]
         post_id = result[1]
 
-        if user_email == email:
+        if user_email == author_email:
             sql_query = "DELETE FROM `comments` WHERE `comment_id`=%s"
 
             delete_cur = db_conn.cursor()
-            result = delete_cur.execute(sql_query, (comment_id,))
+            delete_cur.execute(sql_query, (comment_id,))
 
-            if result.rowcount:
+            if delete_cur:
                 message = "comment deleted successfully"
                 cat_filter = "success"
+                db_conn.commit()
 
             else:
                 message = "could not delete comment"
                 cat_filter = "danger"
 
-            db_conn.commit()
+        db_conn.close()
 
-            flash(message, cat_filter)
+        flash(message, cat_filter)
 
-    db_conn.close()
-
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+    
     return redirect(url_for('read_article', article_id=post_id))
 
 
