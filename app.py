@@ -96,22 +96,25 @@ def update_user_profile(email, set_field, field_name, btn_name):
 # index/home page
 @app.route('/')
 def index():
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
-
-    sql_query = "SELECT * FROM `articles` ORDER BY `post_date` DESC"
-
-    cur = db_conn.cursor()
-
-    result = cur.execute(sql_query)
-
     articles = []
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    if result:
-        articles = result.fetchall()
+        sql_query = "SELECT `post_id`, `post_title`, `post_content`, `user_email`, `post_date` FROM `articles`  ORDER BY `post_id` DESC"
 
-    db_conn.close()
+        cur = db_conn.cursor()
+
+        cur.execute(sql_query)
+
+        if cur:
+            articles = cur.fetchall()
+
+        db_conn.close()
+
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
 
     return render_template("index.html", articles=articles)
 
@@ -602,7 +605,7 @@ def all_articles():
             host=HOST, user=USERNAME,
             password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-        sql_query = "SELECT `post_id`, `post_title`, `post_content`, `user_email`, `post_date` FROM `articles`  ORDER BY `post_id` DESC"
+        sql_query = "SELECT `post_id`, `post_title`, `user_email`, `post_date` FROM `articles`  ORDER BY `post_id` DESC"
 
         cur = db_conn.cursor()
         cur.execute(sql_query)
