@@ -595,22 +595,24 @@ def delete_user(email=''):
 @app.route('/article/')  # /article/unknow_id - return articles
 @app.route('/articles')
 def all_articles():
-
     articles = []
 
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    sql_query = "SELECT `post_id`, `post_title`, `user_email`,`post_date` FROM `articles` ORDER BY `post_id` DESC"
+        sql_query = "SELECT `post_id`, `post_title`, `post_content`, `user_email`, `post_date` FROM `articles`  ORDER BY `post_id` DESC"
 
-    cur = db_conn.cursor()
+        cur = db_conn.cursor()
+        cur.execute(sql_query)
 
-    cur = cur.execute(sql_query)
+        if cur:
+            articles = cur.fetchall()
 
-    articles = cur.fetchall() if cur else None
-
-    db_conn.close()
+        db_conn.close()
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
 
     return render_template('all_articles.html', articles=articles)
 
@@ -764,7 +766,7 @@ def write_article():
 
             flash(message, cat_filter)
             return render_template(
-            'write_article.html', post_title=post_title, post_content=post_content)
+                'write_article.html', post_title=post_title, post_content=post_content)
 
         db_conn.commit()
         db_conn.close()
