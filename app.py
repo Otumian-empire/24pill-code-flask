@@ -52,7 +52,7 @@ def update_user_profile(email, set_field, field_name, btn_name):
     if not email:
         return False
 
-    if not request.form or not request.method == 'POST':
+    if not request.method == 'POST':
         return False
 
     if email != session.get('email'):
@@ -64,33 +64,38 @@ def update_user_profile(email, set_field, field_name, btn_name):
     if not field_name or not field_btn_val:
         message = 'There is an empty field, please fill it out'
         cat_filter = 'danger'
+        return False
 
-    else:
-        sql_query = f"UPDATE `users` SET {set_field}=%s WHERE `user_email`=%s"
-        values = (field_data, email)
+    sql_query = f"UPDATE `users` SET {set_field}=%s WHERE `user_email`=%s"
+    values = (field_data, email)
 
+    try:
         db_conn = mysql.connector.connect(
             host=HOST, user=USERNAME,
             password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
         cur = db_conn.cursor()
 
-        result = cur.execute(sql_query, values)
+        cur.execute(sql_query, values)
+
+        if not cur:
+            message = "update unsuccessful"
+            cat_filter = 'danger'
+            db_conn.close()
+            return False
 
         message = "update successful"
         cat_filter = 'success'
 
-        if not result or not result.rowcount:
-            message = "update unsuccessful"
-            cat_filter = 'danger'
-
-        # stamp the database - commit the changes and close connection
         db_conn.commit()
         db_conn.close()
 
-    flash(message, cat_filter)
+        flash(message, cat_filter)
+        return True
 
-    return True
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return False
 
 
 # index/home page
@@ -125,8 +130,8 @@ def about():
     return render_template("about.html")
 
 
+# static page + form
 @app.route('/contact', methods=['GET', 'POST'])
-# add a basic form so that users can communicate with you
 def contact():
     return render_template('contact.html')
 
