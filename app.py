@@ -720,7 +720,70 @@ def update_article(article_id):
     if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
-    # TODO: rewrite this functionality
+    if request.method != 'POST':
+        try:
+            post_id = article_id
+
+            db_conn = mysql.connector.connect(
+                host=HOST, user=USERNAME,
+                password=PASSWORD, database=DATABASE_NAME, buffered=True)
+
+            sql_query = "SELECT `post_title`, `post_content` FROM `articles` WHERE `post_id`=%s"
+
+            select_cur = db_conn.cursor()
+            select_cur.execute(sql_query, (post_id, ))
+
+            if not select_cur:
+                return redirect(url_for('all_articles'))
+
+            article = select_cur.fetchone()
+
+            db_conn.close()
+
+            return render_template('update_article.html', article=article)
+
+        except (mysql.connector.Error, Exception) as e:
+            print(str(e))
+            return redirect(url_for('all_articles'))
+
+    else:
+
+        try:
+            post_id = article_id
+
+            post_content = request.form.get('update_post_content')
+            post_title = request.form.get('update_post_title')
+            post_btn = request.form.get('update_post_submit_button')
+
+            if not post_content or not post_title or not post_btn:
+                return render_template('update_article.html', article=article)
+
+            sql_query = "UPDATE `articles` SET  `post_content`=%s, `post_title`=%s WHERE `post_id`=%s"
+            values = (post_content, post_title, post_id)
+
+            db_conn = mysql.connector.connect(
+                host=HOST, user=USERNAME,
+                password=PASSWORD, database=DATABASE_NAME, buffered=True)
+
+            update_cur = db_conn.cursor()
+            update_cur.execute(sql_query, values)
+
+            if update_cur:
+                db_conn.commit()
+                db_conn.close()
+
+                flash("article updated successfully", 'success')
+                return redirect(url_for('read_article', article_id=post_id))
+
+            db_conn.close()
+
+            flash('update unsuccessful', 'danger')
+
+            return render_template('update_article.html', article=article)
+
+        except (mysql.connector.Error, Exception) as e:
+            print(str(e))
+            return redirect(url_for('all_articles'))
 
 
 @app.route('/article/write', methods=['GET', 'POST'])
