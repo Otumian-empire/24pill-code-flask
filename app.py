@@ -21,15 +21,6 @@ HOST = "localhost"
 PASSWORD = ""
 
 
-# check if there is session
-def is_set_session():
-    """
-    check if there is session. We do this to see if user has actually signed in
-    """
-
-    return 'token' in session and 'email' in session
-
-
 # function to read the article content and title
 def read_title_and_post(article_id):
     id = article_id
@@ -55,7 +46,7 @@ def read_title_and_post(article_id):
 # , the name of the field to update. the value to pass there is obtain from the form.
 # also we take the field name and the name of the button to that form
 def update_user_profile(email, set_field, field_name, btn_name):
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
     if not email:
@@ -225,7 +216,7 @@ def reset_password(email=''):
 @app.route('/comment/write/<string:article_id>', methods=['GET', 'POST'])
 def write_comment(article_id):
 
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
     message = ''
@@ -276,7 +267,7 @@ def write_comment(article_id):
 
 @app.route('/comment/delete/<string:comment_id>', methods=['GET', 'POST'])
 def delete_comment(comment_id):
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
     user_email = session.get('email')
@@ -340,7 +331,7 @@ def read_comment(comment_id):
 
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(comment_id):
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
     user_email = session.get('email')
@@ -419,7 +410,7 @@ def update_comment(comment_id):
 @app.route('/account/signup/', methods=['GET', 'POST'])
 @app.route('/account/signup/<string:email>', methods=['GET', 'POST'])
 def signup(email=''):
-    if is_set_session():
+    if 'token' in session or 'email' in session:
         return redirect(url_for('logout'))
 
     message = ''
@@ -667,7 +658,7 @@ def read_article(article_id):
 
 @app.route("/article/delete/<string:article_id>")
 def delete_article(article_id):
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
     db_conn = mysql.connector.connect(
@@ -723,114 +714,71 @@ def delete_article(article_id):
 
 @app.route('/article/update/<string:article_id>', methods=['GET', 'POST'])
 def update_article(article_id):
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
-    article = read_title_and_post(article_id)
-
-    if not article:
-        return redirect(url_for('all_articles'))
-
-    post_id = article_id
-
-    if request.form and request.method == 'POST':
-
-        post_content = request.form.get('update_post_content')
-        post_title = request.form.get('update_post_title')
-        post_btn = request.form.get('update_post_submit_button')
-
-        if post_title and post_content and post_btn:
-
-            db_conn = mysql.connector.connect(
-                host=HOST, user=USERNAME,
-                password=PASSWORD, database=DATABASE_NAME, buffered=True)
-
-            sql_query = "UPDATE `articles` SET  `post_content`=%s, `post_title`=%s WHERE `post_id`=%s"
-            values = (post_content, post_title, post_id)
-
-            cur = db_conn.cursor()
-            update_result = cur.execute(sql_query, values)
-
-            if update_result.rowcount:
-                # stamp the db
-                db_conn.commit()
-                db_conn.close()
-
-                flash("article updated successfully", 'success')
-                return redirect(url_for('read_article', article_id=post_id))
-
-            else:
-                # stamp the db
-                db_conn.commit()
-                db_conn.close()
-                flash('update unsuccessful', 'danger')
-
-    return render_template('update_article.html', article=article)
+    # TODO: rewrite this functionality
 
 
 @app.route('/article/write', methods=['GET', 'POST'])
 def write_article():
-    if not is_set_session():
+    if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
-    user_email = session.get('email')
 
     message = ''
     cat_filter = "danger"
 
-    if not request.form:
-        message = "There is no request form"
+    if request.method != 'POST':
+        return render_template('write_article.html')
 
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+    post_title = request.form.get('post_title')
+    post_content = request.form.get('post_content')
+    post_submit_button = request.form.get('post_submit_button')
 
-        else:
+    if not post_title or not post_content or not post_submit_button:
+        message = 'There are empty fields, please fill them out'
 
-            post_title = request.form.get('post_title')
-            post_content = request.form.get('post_content')
-            post_submit_button = request.form.get('post_submit_button')
+        return render_template(
+            'write_article.html', post_title=post_title, post_content=post_content)
 
-            if not post_title or not post_content or not post_submit_button:
-                message = 'There are empty fields, please fill them out'
+    # need some validation and verification
 
-            else:
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-                # need some validation and verification
+        user_email = session.get('email')
+        post_date = Gen().get_current_date_time()
 
-                db_conn = mysql.connector.connect(
-                    host=HOST, user=USERNAME,
-                    password=PASSWORD, database=DATABASE_NAME, buffered=True)
+        sql_query = "INSERT INTO `articles`(`post_title`, `post_content`, `user_email`, `post_date`) VALUES(%s, %s, %s, %s)"
+        values = (post_title, post_content, user_email, post_date)
 
-                post_date = Gen().get_current_date_time()
+        cur = db_conn.cursor()
+        cur.execute(sql_query, values)
 
-                sql_query = "INSERT INTO `articles`(`post_title`, `post_content`, `user_email`, `post_date`) VALUES(%s, %s, %s, %s)"
-                values = (post_title, post_content, user_email, post_date)
+        if not cur:
+            message = "An error while creating an article, please try again in a few seconds later"
 
-                cur = db_conn.cursor()
+            db_conn.close()
 
-                result = cur.execute(sql_query, values)
+            flash(message, cat_filter)
+            return render_template(
+            'write_article.html', post_title=post_title, post_content=post_content)
 
-                if not result.rowcount:
-                    message = "could not add article, please try again"
-                    db_conn.commit()
-                    db_conn.close()
-                else:
-                    # stamp the database - commit the changes and close connection
-                    db_conn.commit()
-                    db_conn.close()
+        db_conn.commit()
+        db_conn.close()
 
-                    # success
-                    message = "article added successfully"
-                    cat_filter = "success"
+        message = "article added successfully"
+        cat_filter = "success"
 
-                    flash(message, cat_filter)
+        flash(message, cat_filter)
+        return redirect(url_for('index'))
 
-                    # redirect to index page
-                    return redirect(url_for('index'))
-
-    flash(message, cat_filter)
-
-    return render_template('write_article.html')
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+        return render_template(
+            'write_article.html', post_title=post_title, post_content=post_content)
 
 
 # test request
