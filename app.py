@@ -625,40 +625,43 @@ def read_article(article_id):
     article = []
     comments = []
 
-    post_id = article_id
+    try:
+        post_id = article_id
 
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    # select article
-    sql_query = "SELECT * FROM `articles` WHERE `post_id`=%s"
+        sql_query = "SELECT * FROM `articles` WHERE `post_id`=%s"
 
-    articles_cur = db_conn.cursor()
+        articles_cur = db_conn.cursor()
+        articles_cur.execute(sql_query, (post_id, ))
 
-    result = articles_cur.execute(sql_query, (post_id, ))
+        if not articles_cur:
+            return redirect(url_for('all_articles'))
 
-    article = result.fetchone() if result else None
+        article = articles_cur.fetchone()
+        print('0000000 article')
+        print(article)
 
-    if not article:
-        return redirect(url_for('all_articles'))
+        # select comments
+        sql_query = "SELECT * FROM `comments` WHERE `post_id`=%s ORDER BY `comment_date` DESC"
 
-    # select comments
-    sql_query = "SELECT * FROM `comments` WHERE `post_id`=%s ORDER BY `comment_date` DESC"
+        comments_cur = db_conn.cursor()
+        comments_cur.execute(sql_query, (post_id, ))
 
-    comments_cur = db_conn.cursor()
+        if comments_cur:
+            comments = comments_cur.fetchall()
 
-    result = comments_cur.execute(sql_query, (post_id, ))
-    comments_result = result.fetchall() if result else None
+        print('0000000 comments')
+        print(comments)
 
-    comments = []
+        db_conn.close()
 
-    if comments_result:
-        comments = comments_result
+    except (mysql.connector.Error, Exception) as e:
+        print('error', str(e))
 
-    db_conn.close()
-
-    return render_template('/article.html', article=article, comments=comments)
+    return render_template("article.html", article=article, comments=comments)
 
 
 @app.route("/article/delete/<string:article_id>")
