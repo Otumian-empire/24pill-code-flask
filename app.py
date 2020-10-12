@@ -23,7 +23,7 @@ PASSWORD = ""
 
 # function to read the article content and title
 def read_title_and_post(article_id):
-    
+
     try:
         id = article_id
 
@@ -283,7 +283,6 @@ def write_comment(article_id):
         print(str(e))
         return redirect(url_for('read_article', article_id=article_id))
 
-
     flash(message, cat_filter)
 
     return redirect(url_for('read_article', article_id=article_id))
@@ -336,7 +335,7 @@ def delete_comment(comment_id):
 
     except (mysql.connector.Error, Exception) as e:
         print(str(e))
-    
+
     return redirect(url_for('read_article', article_id=post_id))
 
 
@@ -350,7 +349,7 @@ def read_comment(comment_id):
             host=HOST, user=USERNAME,
             password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-        sql_query = "SELECT `comment_id`, `comment_text`, `post_id`, `user_email` FROM `comments` WHERE `comment_id`=%s"
+        sql_query = "SELECT `comment_id`, `post_id`, `comment_text`,  `user_email` FROM `comments` WHERE `comment_id`=%s"
 
         cur = db_conn.cursor()
         cur.execute(sql_query, (comment_id, ))
@@ -369,6 +368,7 @@ def read_comment(comment_id):
         return False
 
 
+# update a comment
 @app.route('/comment/update/<string:comment_id>', methods=['GET', 'POST'])
 def update_comment(comment_id):
     if not 'token' in session or not 'email' in session:
@@ -376,74 +376,67 @@ def update_comment(comment_id):
 
     user_email = session.get('email')
 
-    # read the comment data
     data = read_comment(comment_id)
 
     if not data:
         return redirect(url_for('all_articles'))
 
-    # comment_id = data[0]
-    # comment_text = data[1]
-    post_id = data[2]
-    email = data[3]
+    result_comment_id = data[0]
+    result_post_id = data[1]
+    result_comment_text = data[2]
+    result_email = data[3]
 
     cat_filter = 'danger'
     message = ''
 
-    if not email == user_email:
+    if str(result_comment_id) != comment_id:
+        return redirect(url_for('all_articles'))
+
+    if result_email != user_email:
         message = "edit an article you wrote"
         return redirect(url_for('all_articles'))
 
-    if not request.form:
-        message = "There is no request form"
+    if request.method != 'POST':
+        message = 'Request method is not POST'
+        flash(message, cat_filter)
+        comment = [comment_id, result_comment_text]
+        return render_template('update_comment.html', comment=comment)
 
-    else:
-        if request.method != 'POST':
-            message = 'Request method is not POST'
+    comment_text = request.form.get('update_comment_content')
+    update_comment_submit_btn = request.form.get(
+        'update_comment_submit_button')
+
+    if not comment_text or not update_comment_submit_btn:
+        message = 'Select a comment you wrote'
+        return redirect(url_for('read_article', article_id=result_post_id))
+
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
+
+        sql_query = "UPDATE `comments` SET `comment_text`=%s WHERE `comment_id`=%s AND `user_email`=%s"
+        values = (comment_text, comment_id, user_email)
+
+        cur = db_conn.cursor()
+        cur.execute(sql_query, values)
+
+        if not cur:
+            message = "could not update the comment"
 
         else:
+            message = "comment updated successfully"
+            cat_filter = "success"
+            db_conn.commit()
 
-            comment_text = request.form.get('update_comment_content')
-            update_comment_submit_btn = request.form.get(
-                'update_comment_submit_button')
+        db_conn.close()
 
-            if not comment_text or not update_comment_submit_btn:
-                message = 'Select a comment you wrote'
-                return redirect(url_for('read_article', article_id=post_id))
-
-            else:
-
-                db_conn = mysql.connector.connect(
-                    host=HOST, user=USERNAME,
-                    password=PASSWORD, database=DATABASE_NAME, buffered=True)
-
-                sql_query = "UPDATE `comments` SET `comment_text`=%s WHERE `comment_id`=%s AND `user_email`=%s"
-                values = (comment_text, comment_id, user_email)
-
-                cur = db_conn.cursor()
-
-                result = cur.execute(sql_query, values)
-
-                if not result.rowcount:
-                    message = "could not update the comment"
-
-                else:
-                    # a row is affected
-                    message = "comment updated successfully"
-                    cat_filter = "success"
-
-                # stamp the database - commit the changes and close connection
-                db_conn.commit()
-                db_conn.close()
-
-                flash(message, cat_filter)
-
-                # redirect to to read_article with the article id
-                return redirect(url_for('read_article', article_id=post_id))
-
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
+    
     flash(message, cat_filter)
 
-    return render_template('update_comment.html', comment=data)
+    return redirect(url_for('read_article', article_id=result_post_id))
 
 
 # signup, login, Logout and delete account
