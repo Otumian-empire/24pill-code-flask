@@ -13,7 +13,7 @@ app.debug = True
 app.secret_key = "12345"  # use a better secret_key
 app.templates_auto_reload = True
 app.cache_type = "null"
-app.permanent_session_lifetime = datetime.timedelta(hours=1)
+app.permanent_session_lifetime = datetime.timedelta(minutes=10)
 
 DATABASE_NAME = "pill_code_db"  # mysql db_name
 USERNAME = "root"
@@ -669,40 +669,33 @@ def delete_article(article_id):
     if not 'token' in session or not 'email' in session:
         return redirect(url_for('logout'))
 
-    db_conn = mysql.connector.connect(
-        host=HOST, user=USERNAME,
-        password=PASSWORD, database=DATABASE_NAME, buffered=True)
+    try:
+        db_conn = mysql.connector.connect(
+            host=HOST, user=USERNAME,
+            password=PASSWORD, database=DATABASE_NAME, buffered=True)
 
-    sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=%s"
+        sql_query = "SELECT `user_email` FROM `articles` WHERE `post_id`=%s"
 
-    select_articles_cur = db_conn.cursor()
+        select_article_cur = db_conn.cursor()
+        select_article_cur.execute(sql_query, (article_id,))
 
-    articles_result = select_articles_cur.execute(sql_query, (article_id,))
+        if select_article_cur:
+            author_email = select_article_cur.fetchone()[0]
 
-    data = articles_result.fetchone() if articles_result else None
+        user_email = session.get('email')
 
-    user_email = session.get('email')
-
-    if result:
-        result_email = data[0]
-
-        if result_email == user_email:
+        if author_email == user_email:
 
             sql_query = "DELETE FROM `articles` WHERE `post_id`=%s AND `user_email`=%s"
             values = (article_id, user_email)
 
             delete_articles_cur = db_conn.cursor()
+            delete_articles_cur.execute(sql_query, values)
 
-            delete_result = delete_articles_cur.execute(sql_query, values)
-
-            if delete_result.rowcount:
-                # delete all comments related to this article.
-                # it is a success either a row is affected or not
-
+            if delete_articles_cur:
                 sql_query = "DELETE FROM `comments` WHERE `post_id`=%s"
 
                 delete_comments_cur = db_conn.cursor()
-
                 delete_comments_cur.execute(sql_query, (article_id,))
 
                 flash("Article deleted successfully", 'success')
@@ -715,7 +708,9 @@ def delete_article(article_id):
 
             return redirect(url_for('all_articles'))
 
-    db_conn.close()
+        db_conn.close()
+    except (mysql.connector.Error, Exception) as e:
+        print(str(e))
 
     return redirect(url_for('read_article', article_id=article_id))
 
