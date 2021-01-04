@@ -4,3 +4,4 @@ commit
 smysql.py
 ssqlite.py
 sample.py
+.env
