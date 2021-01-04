@@ -2,3 +2,6 @@ pill_code_db.db
 .env
 commit
 .commit.swp
+smysql.py
+ssqlite.py
+sample.py
